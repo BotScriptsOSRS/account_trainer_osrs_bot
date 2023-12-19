@@ -20,7 +20,7 @@ public class FishingState implements BotState {
     public FishingState(Script script, TaskStrategy strategy) {
         this.strategy = strategy;
         long startTime = System.currentTimeMillis();
-        this.switchTime = startTime + (long) (3600000/20 + Math.random() * 3600000/1000); // 1 to 2 hours from startTime
+        this.switchTime = startTime + (long) (3600000/6 + Math.random() * 3600000/6); // 1 to 2 hours from startTime
         script.log("Entering fishing state");
     }
 
