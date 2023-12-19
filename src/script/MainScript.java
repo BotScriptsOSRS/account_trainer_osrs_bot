@@ -1,6 +1,5 @@
 package script;
 
-import org.osbot.rs07.api.ui.Skill;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
 import script.paint.OSDPainter;
@@ -19,13 +18,12 @@ public class MainScript extends Script {
 
     private BotState currentState;
     private boolean stateChanged;
-    private TaskRegistry taskRegistry;
     private OSDPainter osdPainter;
 
     @Override
-    public void onStart() throws InterruptedException {
+    public void onStart() {
         osdPainter = new OSDPainter(this);
-        taskRegistry = new TaskRegistry();
+        TaskRegistry taskRegistry = new TaskRegistry();
 
         // Register tasks
         taskRegistry.registerTask(new WoodcuttingStrategy());
@@ -37,7 +35,6 @@ public class MainScript extends Script {
         } else {
             currentState = new FishingState(this, taskRegistry.getTask(FishingStrategy.class));
         }
-        osdPainter.startSkillTracker(Skill.WOODCUTTING);
     }
 
     @Override
@@ -51,16 +48,10 @@ public class MainScript extends Script {
         return random(200, 300);
     }
 
-    public void setCurrentState(BotState newState, Skill newSkill) {
-        // Pause all skill trackers
-        osdPainter.pauseAllSkillTrackers();
-        // Start tracking the new skill
-        osdPainter.startSkillTracker(newSkill);
-
+    public void setCurrentState(BotState newState) {
         this.currentState = newState;
         this.stateChanged = true;
     }
-
 
     @Override
     public void onPaint(Graphics2D g) {

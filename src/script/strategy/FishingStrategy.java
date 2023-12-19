@@ -14,7 +14,7 @@ public class FishingStrategy implements TaskStrategy {
     private final Position fishingPosition = new Position(3242, 3152, 0);
 
     @Override
-    public void execute(Script script) throws InterruptedException {
+    public void execute(Script script) {
         if (!isInFishingArea(script)) {
             walkToFishPosition(script);
         }
@@ -53,7 +53,7 @@ public class FishingStrategy implements TaskStrategy {
     private void waitForFishingAnimation(Script script) {
         new ConditionalSleep(5000, 1000) {
             @Override
-            public boolean condition() throws InterruptedException {
+            public boolean condition() {
                 return script.myPlayer().isAnimating();
             }
         }.sleep();

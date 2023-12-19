@@ -8,7 +8,7 @@ import org.osbot.rs07.utility.ConditionalSleep;
 import java.util.Map;
 
 public class BankingStrategy implements TaskStrategy {
-    private Map<Integer, Integer> requiredItems; // Map of Item ID to Quantity
+    private final Map<Integer, Integer> requiredItems; // Map of Item ID to Quantity
 
     public BankingStrategy(Map<Integer, Integer> requiredItems) {
         this.requiredItems = requiredItems;
@@ -46,7 +46,7 @@ public class BankingStrategy implements TaskStrategy {
         if (script.getBank().open()) {
             new ConditionalSleep(10000, 1000) {
                 @Override
-                public boolean condition() throws InterruptedException {
+                public boolean condition() {
                     return script.getBank().isOpen();
                 }
             }.sleep();
@@ -57,7 +57,7 @@ public class BankingStrategy implements TaskStrategy {
         return false;
     }
 
-    private void depositInventoryAndEquipment(Script script) throws InterruptedException {
+    private void depositInventoryAndEquipment(Script script) {
         if (!script.getInventory().isEmpty()) {
             script.log("Depositing inventory");
             script.getBank().depositAll();
@@ -85,7 +85,7 @@ public class BankingStrategy implements TaskStrategy {
         }
     }
 
-    private void withdrawSingleItem(Script script, int itemId, int quantity) throws InterruptedException {
+    private void withdrawSingleItem(Script script, int itemId, int quantity) {
         int amountInInventory = (int) script.getInventory().getAmount(itemId);
         int amountToWithdraw = quantity - amountInInventory;
         if (amountToWithdraw <= 0) {
@@ -108,19 +108,19 @@ public class BankingStrategy implements TaskStrategy {
 
         new ConditionalSleep(2000) {
             @Override
-            public boolean condition() throws InterruptedException {
+            public boolean condition() {
                 return script.getInventory().contains(itemId);
             }
         }.sleep();
     }
 
-    private void equipItems(Script script) throws InterruptedException {
+    private void equipItems(Script script) {
         for (int itemId : requiredItems.keySet()) {
             equipItemIfPresent(script, itemId);
         }
     }
 
-    private void equipItemIfPresent(Script script, int itemId) throws InterruptedException {
+    private void equipItemIfPresent(Script script, int itemId) {
         Item item = script.getInventory().getItem(itemId);
         if (item != null && item.hasAction("Wield")) {
             script.log("Equipping item ID: " + itemId);
@@ -129,10 +129,10 @@ public class BankingStrategy implements TaskStrategy {
         }
     }
 
-    private void waitForEquip(Script script, int itemId) throws InterruptedException {
+    private void waitForEquip(Script script, int itemId) {
         new ConditionalSleep(5000, 1000) {
             @Override
-            public boolean condition() throws InterruptedException {
+            public boolean condition() {
                 return script.getEquipment().contains(itemId);
             }
         }.sleep();

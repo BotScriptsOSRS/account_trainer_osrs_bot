@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TaskRegistry {
-    private Map<Class<? extends TaskStrategy>, TaskStrategy> tasks = new HashMap<>();
+    private final Map<Class<? extends TaskStrategy>, TaskStrategy> tasks = new HashMap<>();
 
     public void registerTask(TaskStrategy task) {
         tasks.put(task.getClass(), task);

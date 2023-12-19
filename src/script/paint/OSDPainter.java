@@ -9,11 +9,10 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class OSDPainter {
-    private Script script;
-    private Map<Skill, SkillTracker> skillTrackers;
-    private Map<Skill, Integer> previousExp;
-    private long scriptStartTime;
-    private final int trackerHeight = 40; // Height of each tracker block
+    private final Script script;
+    private final Map<Skill, SkillTracker> skillTrackers;
+    private final Map<Skill, Integer> previousExp;
+    private final long scriptStartTime;
 
     public OSDPainter(Script script) {
         this.script = script;
@@ -27,7 +26,7 @@ public class OSDPainter {
             int currentExp = script.getSkills().getExperience(skill);
             if (!previousExp.containsKey(skill)) {
                 // Initialize the previous experience for all skills to 0 or current experience
-                previousExp.put(skill, currentExp == 0 ? 0 : currentExp);
+                    previousExp.put(skill, currentExp);
             } else if (currentExp > previousExp.get(skill)) {
                 // Add a tracker only if the skill's experience has increased from its previous value
                 skillTrackers.putIfAbsent(skill, new SkillTracker(script, skill));
@@ -75,8 +74,6 @@ public class OSDPainter {
         // Time to next level
         g.drawString("Time to Next Lvl: " + tracker.getTimeToNextLevel(), 10, y + 30);
 
-        // Skill-specific runtime
-        g.drawString("Skill Runtime: " + tracker.getSkillRunTime(), 10, y + 45);
     }
 
     private List<SkillTracker> getDisplayedTrackers() {
@@ -85,17 +82,10 @@ public class OSDPainter {
 
     private String formatTime(long time) {
         long s = time / 1000, m = s / 60, h = m / 60;
-        s %= 60; m %= 60; h %= 24;
+        s %= 60;
+        m %= 60;
+        h %= 24;
         return String.format("%02d:%02d:%02d", h, m, s);
     }
 
-    // Method to start tracking a skill
-    public void startSkillTracker(Skill skill) {
-        skillTrackers.computeIfAbsent(skill, k -> new SkillTracker(script, skill)).startTracking();
-    }
-
-    // Method to pause tracking for all skills
-    public void pauseAllSkillTrackers() {
-        skillTrackers.values().forEach(SkillTracker::pauseTracking);
-    }
 }

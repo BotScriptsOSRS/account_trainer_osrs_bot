@@ -1,6 +1,5 @@
 package script.state;
 
-import org.osbot.rs07.api.ui.Skill;
 import org.osbot.rs07.script.Script;
 import script.MainScript;
 import script.strategy.BankingStrategy;
@@ -12,17 +11,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class WoodcuttingState implements BotState {
-    private Script script;
-    private TaskStrategy strategy;
-    private long startTime;
-    private long switchTime;
+    private final TaskStrategy strategy;
+    private final long switchTime;
     private static final int SMALL_FISHING_NET_ID = 303;
     private static final int BRONZE_AXE_ID = 1351; // Example item ID for a bronze axe
 
     public WoodcuttingState(Script script, TaskStrategy strategy) {
-        this.script = script;
         this.strategy = strategy;
-        this.startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         this.switchTime = startTime + (long) (3600000/6 + Math.random() * 3600000/6); // 1 to 2 hours from startTime
         script.log("Entering woodcutting state");
     }
@@ -52,7 +48,7 @@ public class WoodcuttingState implements BotState {
         Map<Integer, Integer> requiredItemsForWoodcutting = new HashMap<>();
         requiredItemsForWoodcutting.put(BRONZE_AXE_ID, 1);
         script.setCurrentState(new BankingState(script, new BankingStrategy(requiredItemsForWoodcutting),
-                new WoodcuttingState(script, new WoodcuttingStrategy())), Skill.FISHING);
+                new WoodcuttingState(script, new WoodcuttingStrategy())));
     }
 
     private void executeWoodcuttingStrategy(MainScript script) throws InterruptedException {
@@ -73,9 +69,10 @@ public class WoodcuttingState implements BotState {
 
     private BotState switchToFishingState(MainScript script) {
         script.log("Switching to fishing");
+        // Required items for fishing
         Map<Integer, Integer> requiredItemsForFishing = new HashMap<>();
         requiredItemsForFishing.put(SMALL_FISHING_NET_ID, 1);
-        return new BankingState(script, new BankingStrategy(requiredItemsForFishing),
-                new FishingState(script, new FishingStrategy()));
+        // Return a new BankingState instance with the required items and new FishingState as the next state
+        return new BankingState(script, new BankingStrategy(requiredItemsForFishing), new FishingState(script, new FishingStrategy()));
     }
 }
