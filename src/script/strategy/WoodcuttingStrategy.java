@@ -13,7 +13,7 @@ public class WoodcuttingStrategy implements TaskStrategy {
     private final Position safePosition = new Position(3194, 3241, 0);
 
     @Override
-    public void execute(Script script) throws InterruptedException {
+    public void execute(Script script) {
         if (isUnderAttack(script)) {
             moveToSafePosition(script);
         } else if (!isInWoodcuttingArea(script)) {
@@ -74,7 +74,7 @@ public class WoodcuttingStrategy implements TaskStrategy {
     private void waitForWoodcuttingToStart(Script script) {
         new ConditionalSleep(8000, 1500) {
             @Override
-            public boolean condition() throws InterruptedException {
+            public boolean condition() {
                 return script.myPlayer().isAnimating();
             }
         }.sleep();

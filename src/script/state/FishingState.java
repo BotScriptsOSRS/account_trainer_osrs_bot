@@ -1,6 +1,5 @@
 package script.state;
 
-import org.osbot.rs07.api.ui.Skill;
 import org.osbot.rs07.script.Script;
 import script.MainScript;
 import script.strategy.BankingStrategy;
@@ -12,19 +11,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FishingState implements BotState {
-    private Script script;
-    private TaskStrategy strategy;
-    private long startTime;
+    private final TaskStrategy strategy;
     private static final int BRONZE_AXE_ID = 1351;
     private static final int SMALL_FISHING_NET_ID = 303;
 
-    private long switchTime; // Time to switch to woodcutting
+    private final long switchTime; // Time to switch to woodcutting
 
     public FishingState(Script script, TaskStrategy strategy) {
-        this.script = script;
         this.strategy = strategy;
-        this.startTime = System.currentTimeMillis();
-        this.switchTime = startTime + (long) (3600000/6 + Math.random() * 3600000/6); // 1 to 2 hours from startTime
+        long startTime = System.currentTimeMillis();
+        this.switchTime = startTime + (long) (3600000/20 + Math.random() * 3600000/1000); // 1 to 2 hours from startTime
         script.log("Entering fishing state");
     }
 
@@ -53,7 +49,7 @@ public class FishingState implements BotState {
         Map<Integer, Integer> requiredItemsForFishing = new HashMap<>();
         requiredItemsForFishing.put(SMALL_FISHING_NET_ID, 1);
         script.setCurrentState(new BankingState(script, new BankingStrategy(requiredItemsForFishing),
-                new FishingState(script, new FishingStrategy())), Skill.WOODCUTTING);
+                new FishingState(script, new FishingStrategy())));
     }
 
     private void executeFishingStrategy(MainScript script) throws InterruptedException {

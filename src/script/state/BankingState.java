@@ -5,9 +5,8 @@ import script.MainScript;
 import script.strategy.TaskStrategy;
 
 public class BankingState implements BotState {
-    private Script script;
-    private TaskStrategy bankingStrategy;
-    private BotState nextState;
+    private final TaskStrategy bankingStrategy;
+    private final BotState nextState;
 
     public BankingState(Script script, TaskStrategy bankingStrategy, BotState nextState) {
         this.bankingStrategy = bankingStrategy;
