@@ -1,23 +1,19 @@
 package script.state;
 
-import org.osbot.rs07.script.Script;
 import script.MainScript;
 import script.strategy.BankingStrategy;
 import script.strategy.TaskStrategy;
-import script.strategy.WoodcuttingStrategy;
-import script.strategy.FishingStrategy;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class FishingState implements BotState {
     private final TaskStrategy strategy;
-    private static final int BRONZE_AXE_ID = 1351;
     private static final int SMALL_FISHING_NET_ID = 303;
 
-    private final long switchTime; // Time to switch to woodcutting
+    private final long switchTime; // Time to switch to another state
 
-    public FishingState(Script script, TaskStrategy strategy) {
+    public FishingState(MainScript script, TaskStrategy strategy) {
         this.strategy = strategy;
         long startTime = System.currentTimeMillis();
         this.switchTime = startTime + (long) (3600000/6 + Math.random() * 3600000/6); // 1 to 2 hours from startTime
@@ -48,8 +44,7 @@ public class FishingState implements BotState {
         script.log("Switching to banking state for fishing equipment");
         Map<Integer, Integer> requiredItemsForFishing = new HashMap<>();
         requiredItemsForFishing.put(SMALL_FISHING_NET_ID, 1);
-        script.setCurrentState(new BankingState(script, new BankingStrategy(requiredItemsForFishing),
-                new FishingState(script, new FishingStrategy())));
+        script.setCurrentState(new BankingState(script, new BankingStrategy(requiredItemsForFishing), this));
     }
 
     private void executeFishingStrategy(MainScript script) throws InterruptedException {
@@ -58,21 +53,13 @@ public class FishingState implements BotState {
 
     @Override
     public BotState nextState(MainScript script) {
-        if (shouldSwitchToWoodcutting()) {
-            return switchToWoodcuttingState(script);
+        if (shouldSwitchToAnotherState()) {
+            return script.pickRandomState(this);
         }
         return this;
     }
 
-    private boolean shouldSwitchToWoodcutting() {
+    private boolean shouldSwitchToAnotherState() {
         return System.currentTimeMillis() > switchTime;
-    }
-
-    private BotState switchToWoodcuttingState(MainScript script) {
-        script.log("Switching to woodcutting");
-        Map<Integer, Integer> requiredItemsForWoodcutting = new HashMap<>();
-        requiredItemsForWoodcutting.put(BRONZE_AXE_ID, 1);
-        return new BankingState(script, new BankingStrategy(requiredItemsForWoodcutting),
-                new WoodcuttingState(script, new WoodcuttingStrategy()));
     }
 }

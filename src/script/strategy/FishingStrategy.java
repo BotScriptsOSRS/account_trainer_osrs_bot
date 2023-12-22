@@ -1,7 +1,6 @@
 package script.strategy;
 
 import org.osbot.rs07.api.map.Area;
-import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
@@ -11,12 +10,11 @@ public class FishingStrategy implements TaskStrategy {
     private static final int SMALL_FISHING_NET_ID = 303;
     private static final int NET_FISHING_SPOT_ID = 1530;
     private final Area fishingArea = new Area(3237, 3139, 3249, 3162);
-    private final Position fishingPosition = new Position(3242, 3152, 0);
 
     @Override
     public void execute(Script script) {
         if (!isInFishingArea(script)) {
-            walkToFishPosition(script);
+            walkToFishArea(script);
         }
 
         if (script.getInventory().isFull()) {
@@ -30,9 +28,9 @@ public class FishingStrategy implements TaskStrategy {
         return fishingArea.contains(script.myPlayer());
     }
 
-    private void walkToFishPosition(Script script) {
+    private void walkToFishArea(Script script) {
         script.log("Walking to fishing area");
-        script.getWalking().webWalk(fishingPosition);
+        script.getWalking().webWalk(fishingArea);
     }
 
     private void handleFullInventory(Script script) {

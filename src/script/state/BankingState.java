@@ -1,16 +1,15 @@
 package script.state;
 
-import org.osbot.rs07.script.Script;
 import script.MainScript;
 import script.strategy.TaskStrategy;
 
 public class BankingState implements BotState {
     private final TaskStrategy bankingStrategy;
-    private final BotState nextState;
+    private final BotState returnState; // State to return to after banking
 
-    public BankingState(Script script, TaskStrategy bankingStrategy, BotState nextState) {
+    public BankingState(MainScript script, TaskStrategy bankingStrategy, BotState returnState) {
         this.bankingStrategy = bankingStrategy;
-        this.nextState = nextState;
+        this.returnState = returnState;
         script.log("Entering banking state");
     }
 
@@ -21,7 +20,7 @@ public class BankingState implements BotState {
 
     @Override
     public BotState nextState(MainScript script) {
-        return nextState;
+        // Return to the state that required banking
+        return returnState;
     }
 }
-
