@@ -29,7 +29,7 @@ public class FishingState implements BotState {
     public FishingState(MainScript script) {
         updateStrategy(script);
         long startTime = System.currentTimeMillis();
-        this.switchTime = startTime + (long) (3600000 / 6 + Math.random() * 3600000 / 6);
+        this.switchTime = startTime + (long) (3600000 + Math.random() * 3600000);
         script.log("Entering fishing state");
     }
 
