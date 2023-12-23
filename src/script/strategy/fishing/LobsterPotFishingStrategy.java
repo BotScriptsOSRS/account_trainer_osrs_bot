@@ -82,7 +82,6 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
         NPC fishingSpot = script.getNpcs().closest(LOBSTER_POT_FISHING_SPOT_ID);
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
             if (fishingSpot.interact("Cage")) {
-                script.log("Start lobster pot fishing");
                 waitForFishingAnimation(script);
             }
         }

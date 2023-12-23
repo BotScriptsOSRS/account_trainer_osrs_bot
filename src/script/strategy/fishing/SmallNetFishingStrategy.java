@@ -47,7 +47,6 @@ public class SmallNetFishingStrategy implements TaskStrategy {
         NPC fishingSpot = script.getNpcs().closest(NET_FISHING_SPOT_ID);
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
             if (fishingSpot.interact("Net")) {
-                script.log("Start fishing");
                 waitForFishingAnimation(script);
             }
         }

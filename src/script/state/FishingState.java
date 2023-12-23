@@ -45,13 +45,10 @@ public class FishingState implements BotState {
     private void updateStrategy(MainScript script) {
         int fishingLevel = script.getSkills().getStatic(Skill.FISHING);
         if (fishingLevel < 20) {
-            script.log("Using shrimps and anchovies fishing strategy");
             this.strategy = new SmallNetFishingStrategy(SMALL_FISHING_NET_ID);
         } else if (fishingLevel < 40) {
-            script.log("Using fly fishing strategy");
             this.strategy = new FlyFishingStrategy(FLY_FISHING_ROD_ID, FEATHER_ID);
         } else {
-            script.log("Using lobster pot fishing strategy");
             this.strategy = new LobsterPotFishingStrategy(LOBSTER_POT_ID, COINS_ID);
         }
     }

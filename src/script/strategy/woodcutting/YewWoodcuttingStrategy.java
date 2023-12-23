@@ -56,10 +56,7 @@ public class YewWoodcuttingStrategy implements TaskStrategy {
 
         Entity tree = script.getObjects().closest(woodcuttingArea, "Yew tree");
         if (tree != null && tree.interact("Chop down")) {
-            script.log("Start woodcutting");
             waitForWoodcuttingToStart(script);
-        } else {
-            script.log("No Yew trees found in the area");
         }
     }
 

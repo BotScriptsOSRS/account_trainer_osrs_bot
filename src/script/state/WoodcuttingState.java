@@ -47,13 +47,10 @@ public class WoodcuttingState implements BotState {
         int bestAxeId = getBestAxeId(woodcuttingLevel);
 
         if (woodcuttingLevel < 15) {
-            script.log("Using tree strategy");
             this.strategy = new TreeWoodcuttingStrategy(bestAxeId);
         } else if (woodcuttingLevel < 60) {
-            script.log("Using oak strategy");
             this.strategy = new OakWoodcuttingStrategy(script, bestAxeId, this);
         } else {
-            script.log("Using yew strategy");
             this.strategy = new YewWoodcuttingStrategy(script, bestAxeId, this);
         }
     }

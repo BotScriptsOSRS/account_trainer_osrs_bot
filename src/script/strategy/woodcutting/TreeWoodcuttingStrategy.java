@@ -36,7 +36,6 @@ public class TreeWoodcuttingStrategy implements TaskStrategy {
     private void moveToSafePosition(Script script) {
         script.log("Under attack, moving to safe position");
         script.getWalking().webWalk(safePosition);
-        script.log("Starting woodcutting");
     }
 
     private boolean isInWoodcuttingArea(Script script) {
@@ -65,7 +64,6 @@ public class TreeWoodcuttingStrategy implements TaskStrategy {
 
         Entity tree = script.getObjects().closest("Tree");
         if (tree != null && tree.interact("Chop down")) {
-            script.log("Start woodcutting");
             waitForWoodcuttingToStart(script);
         }
     }

@@ -1,20 +1,12 @@
 package script.strategy.woodcutting;
 
 import org.osbot.rs07.api.map.Area;
-import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.MainScript;
-import script.state.BankingState;
-import script.state.BotState;
 import script.state.WoodcuttingState;
 import script.strategy.TaskStrategy;
-import script.strategy.banking.DepositAllBankingStrategy;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 public class OakWoodcuttingStrategy implements TaskStrategy {
 
@@ -64,10 +56,7 @@ public class OakWoodcuttingStrategy implements TaskStrategy {
 
         Entity tree = script.getObjects().closest(woodcuttingArea, "Oak tree");
         if (tree != null && tree.interact("Chop down")) {
-            script.log("Start woodcutting");
             waitForWoodcuttingToStart(script);
-        } else {
-            script.log("No Oak trees found in the area");
         }
     }
 
