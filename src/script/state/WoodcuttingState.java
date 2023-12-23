@@ -7,6 +7,7 @@ import script.strategy.banking.SwitchStateOrEquipmentBankingStrategy;
 import script.strategy.TaskStrategy;
 import script.strategy.woodcutting.OakWoodcuttingStrategy;
 import script.strategy.woodcutting.TreeWoodcuttingStrategy;
+import script.strategy.woodcutting.YewWoodcuttingStrategy;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,9 +52,11 @@ public class WoodcuttingState implements BotState {
         } else if (woodcuttingLevel < 60) {
             script.log("Using oak strategy");
             this.strategy = new OakWoodcuttingStrategy(script, bestAxeId, this);
+        } else {
+            script.log("Using yew strategy");
+            this.strategy = new YewWoodcuttingStrategy(script, bestAxeId, this);
         }
     }
-
 
     private boolean checkWoodcuttingEquipment(MainScript script) {
         int woodcuttingLevel = script.getSkills().getStatic(Skill.WOODCUTTING);

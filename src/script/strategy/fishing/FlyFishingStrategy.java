@@ -6,11 +6,17 @@ import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
 
-public class ShrimpsAndAnchoviesFishingStrategy implements TaskStrategy {
+public class FlyFishingStrategy implements TaskStrategy {
 
-    private static final int SMALL_FISHING_NET_ID = 303;
-    private static final int NET_FISHING_SPOT_ID = 1530;
-    private final Area fishingArea = new Area(3237, 3139, 3249, 3162);
+    private final int flyFishingRodId;
+    private final int featherId;
+    private static final int FLY_FISHING_SPOT_ID = 1526;
+    private final Area fishingArea = new Area(3100, 3423, 3110, 3436);
+
+    public FlyFishingStrategy(int flyFishingRodId, int featherId) {
+        this.flyFishingRodId = flyFishingRodId;
+        this.featherId = featherId;
+    }
 
     @Override
     public void execute(Script script) {
@@ -30,20 +36,20 @@ public class ShrimpsAndAnchoviesFishingStrategy implements TaskStrategy {
     }
 
     private void walkToFishArea(Script script) {
-        script.log("Walking to fishing area");
+        script.log("Walking to fly fishing area");
         script.getWalking().webWalk(fishingArea);
     }
 
     private void handleFullInventory(Script script) {
         script.log("Inventory full, dropping fish");
-        script.getInventory().dropAllExcept(SMALL_FISHING_NET_ID);
+        script.getInventory().dropAllExcept(flyFishingRodId, featherId);
     }
 
     private void startFishing(Script script) {
-        NPC fishingSpot = script.getNpcs().closest(NET_FISHING_SPOT_ID);
+        NPC fishingSpot = script.getNpcs().closest(FLY_FISHING_SPOT_ID);
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
-            if (fishingSpot.interact("Net")) {
-                script.log("Start fishing");
+            if (fishingSpot.interact("Lure")) { // Assuming "Lure" is the correct action for fly fishing
+                script.log("Start fly fishing");
                 waitForFishingAnimation(script);
             }
         }

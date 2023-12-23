@@ -27,8 +27,8 @@ public class MainScript extends Script {
         stateMap = new HashMap<>();
 
         // Register states
-        registerState(WoodcuttingState.class);
         registerState(FishingState.class);
+        registerState(WoodcuttingState.class);
         // Add other states here
 
         currentState = pickRandomState(null);
