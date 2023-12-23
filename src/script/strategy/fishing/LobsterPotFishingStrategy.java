@@ -11,7 +11,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     private final int lobsterPotId;
     private final int coinsId;
     private static final int LOBSTER_POT_FISHING_SPOT_ID = 1522;
-    private final Area fishingArea = new Area(2922, 3174, 2927, 3181);
+    private final Area fishingArea = new Area(2921, 3175, 2927, 3181);
     private final Area depositBoxArea = new Area(3043, 3234, 3046, 3237);
 
     public LobsterPotFishingStrategy(int lobsterPotId, int coinsId) {
