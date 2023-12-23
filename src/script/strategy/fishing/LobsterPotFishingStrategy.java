@@ -48,6 +48,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     }
 
     private void depositItems(Script script) {
+        script.log("Attempting to open deposit box");
         new ConditionalSleep(5000) {
             @Override
             public boolean condition() {
@@ -56,6 +57,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
         }.sleep();
 
         if (script.getDepositBox().isOpen()) {
+            script.log("Deposit box is open, depositing items");
             script.getDepositBox().depositAllExcept(lobsterPotId, coinsId);
 
             new ConditionalSleep(5000) {
@@ -65,6 +67,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
                 }
             }.sleep();
 
+            script.log("Items deposited, closing deposit box");
             script.getDepositBox().close();
 
             new ConditionalSleep(5000) {
@@ -73,8 +76,10 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
                     return !script.getDepositBox().isOpen();
                 }
             }.sleep();
+
+            script.log("Deposit box closed, returning to fishing");
         } else {
-            script.log("Could not open the deposit box");
+            script.log("Failed to open deposit box");
         }
     }
 
