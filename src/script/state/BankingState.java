@@ -1,27 +1,27 @@
 package script.state;
 
-import org.osbot.rs07.script.Script;
 import script.MainScript;
 import script.strategy.TaskStrategy;
 
 public class BankingState implements BotState {
     private final TaskStrategy bankingStrategy;
-    private final BotState nextState;
+    private final BotState returnState; // State to return to after banking
 
-    public BankingState(Script script, TaskStrategy bankingStrategy, BotState nextState) {
+    public BankingState(MainScript script, TaskStrategy bankingStrategy, BotState returnState) {
         this.bankingStrategy = bankingStrategy;
-        this.nextState = nextState;
+        this.returnState = returnState;
         script.log("Entering banking state");
     }
 
     @Override
     public void execute(MainScript script) throws InterruptedException {
+        script.log("Executing banking strategy");
         bankingStrategy.execute(script);
     }
 
     @Override
     public BotState nextState(MainScript script) {
-        return nextState;
+        script.log("Returning to previous state after banking");
+        return returnState;
     }
 }
-

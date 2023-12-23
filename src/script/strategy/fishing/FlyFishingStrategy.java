@@ -1,22 +1,27 @@
-package script.strategy;
+package script.strategy.fishing;
 
 import org.osbot.rs07.api.map.Area;
-import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
+import script.strategy.TaskStrategy;
 
-public class FishingStrategy implements TaskStrategy {
+public class FlyFishingStrategy implements TaskStrategy {
 
-    private static final int SMALL_FISHING_NET_ID = 303;
-    private static final int NET_FISHING_SPOT_ID = 1530;
-    private final Area fishingArea = new Area(3237, 3139, 3249, 3162);
-    private final Position fishingPosition = new Position(3242, 3152, 0);
+    private final int flyFishingRodId;
+    private final int featherId;
+    private static final int FLY_FISHING_SPOT_ID = 1526;
+    private final Area fishingArea = new Area(3100, 3423, 3110, 3436);
+
+    public FlyFishingStrategy(int flyFishingRodId, int featherId) {
+        this.flyFishingRodId = flyFishingRodId;
+        this.featherId = featherId;
+    }
 
     @Override
     public void execute(Script script) {
         if (!isInFishingArea(script)) {
-            walkToFishPosition(script);
+            walkToFishArea(script);
         }
 
         if (script.getInventory().isFull()) {
@@ -30,21 +35,20 @@ public class FishingStrategy implements TaskStrategy {
         return fishingArea.contains(script.myPlayer());
     }
 
-    private void walkToFishPosition(Script script) {
-        script.log("Walking to fishing area");
-        script.getWalking().webWalk(fishingPosition);
+    private void walkToFishArea(Script script) {
+        script.log("Walking to fly fishing area");
+        script.getWalking().webWalk(fishingArea);
     }
 
     private void handleFullInventory(Script script) {
         script.log("Inventory full, dropping fish");
-        script.getInventory().dropAllExcept(SMALL_FISHING_NET_ID);
+        script.getInventory().dropAllExcept(flyFishingRodId, featherId);
     }
 
     private void startFishing(Script script) {
-        NPC fishingSpot = script.getNpcs().closest(NET_FISHING_SPOT_ID);
+        NPC fishingSpot = script.getNpcs().closest(FLY_FISHING_SPOT_ID);
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
-            if (fishingSpot.interact("Net")) {
-                script.log("Start fishing");
+            if (fishingSpot.interact("Lure")) { // Assuming "Lure" is the correct action for fly fishing
                 waitForFishingAnimation(script);
             }
         }
