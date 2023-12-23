@@ -1,7 +1,7 @@
 package script.state;
 
 import script.MainScript;
-import script.strategy.BankingStrategy;
+import script.strategy.banking.SwitchStateOrEquipmentBankingStrategy;
 import script.strategy.TaskStrategy;
 
 import java.util.HashMap;
@@ -44,7 +44,7 @@ public class FishingState implements BotState {
         script.log("Switching to banking state for fishing equipment");
         Map<Integer, Integer> requiredItemsForFishing = new HashMap<>();
         requiredItemsForFishing.put(SMALL_FISHING_NET_ID, 1);
-        script.setCurrentState(new BankingState(script, new BankingStrategy(requiredItemsForFishing), this));
+        script.setCurrentState(new BankingState(script, new SwitchStateOrEquipmentBankingStrategy(requiredItemsForFishing), this));
     }
 
     private void executeFishingStrategy(MainScript script) throws InterruptedException {

@@ -1,53 +1,92 @@
 package script.state;
 
+import org.osbot.rs07.api.ui.Skill;
 import script.MainScript;
-import script.strategy.BankingStrategy;
+import script.strategy.banking.DepositAllBankingStrategy;
+import script.strategy.banking.SwitchStateOrEquipmentBankingStrategy;
 import script.strategy.TaskStrategy;
+import script.strategy.woodcutting.OakWoodcuttingStrategy;
+import script.strategy.woodcutting.TreeWoodcuttingStrategy;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class WoodcuttingState implements BotState {
-    private final TaskStrategy strategy;
+    private TaskStrategy strategy;
     private final long switchTime;
-    private static final int BRONZE_AXE_ID = 1351; // Example item ID for a bronze axe
 
-    public WoodcuttingState(MainScript script, TaskStrategy strategy) {
-        this.strategy = strategy;
+    // Axe item IDs
+    private static final int BRONZE_AXE_ID = 1351;
+    private static final int STEEL_AXE_ID = 1353;
+    private static final int BLACK_AXE_ID = 1361;
+    private static final int MITHRIL_AXE_ID = 1355;
+    private static final int ADAMANT_AXE_ID = 1357;
+    private static final int RUNE_AXE_ID = 1359;
+
+    public WoodcuttingState(MainScript script) {
+        updateStrategy(script);
         long startTime = System.currentTimeMillis();
-        this.switchTime = startTime + (long) (3600000/6 + Math.random() * 3600000/6); // 1 to 2 hours from startTime
+        this.switchTime = startTime + (long) (3600000 / 6 + Math.random() * 3600000 / 6);
         script.log("Entering woodcutting state");
     }
 
     @Override
     public void execute(MainScript script) throws InterruptedException {
         if (!checkWoodcuttingEquipment(script)) {
-            return; // Exit if the state has been switched to BankingState
+            return;
         }
-        executeWoodcuttingStrategy(script);
+        updateStrategy(script);
+        strategy.execute(script);
     }
 
+    private void updateStrategy(MainScript script) {
+        int woodcuttingLevel = script.getSkills().getStatic(Skill.WOODCUTTING);
+        int bestAxeId = getBestAxeId(woodcuttingLevel);
+
+        if (woodcuttingLevel < 15) {
+            script.log("Using tree strategy");
+            this.strategy = new TreeWoodcuttingStrategy(bestAxeId);
+        } else if (woodcuttingLevel < 60) {
+            script.log("Using oak strategy");
+            this.strategy = new OakWoodcuttingStrategy(script, bestAxeId, this);
+        }
+    }
+
+
     private boolean checkWoodcuttingEquipment(MainScript script) {
-        if (!hasBronzeAxe(script)) {
-            switchToBankingStateForWoodcuttingEquipment(script);
+        int woodcuttingLevel = script.getSkills().getStatic(Skill.WOODCUTTING);
+        int bestAxeId = getBestAxeId(woodcuttingLevel);
+        if (!script.getInventory().contains(bestAxeId) && !script.getEquipment().contains(bestAxeId)) {
+            switchToBankingStateForWoodcuttingEquipment(script, bestAxeId);
             return false;
         }
         return true;
     }
 
-    private boolean hasBronzeAxe(MainScript script) {
-        return script.getInventory().contains(BRONZE_AXE_ID) || script.getEquipment().contains(BRONZE_AXE_ID);
+    private int getBestAxeId(int woodcuttingLevel) {
+        if (woodcuttingLevel >= 41) return RUNE_AXE_ID;
+        else if (woodcuttingLevel >= 31) return ADAMANT_AXE_ID;
+        else if (woodcuttingLevel >= 21) return MITHRIL_AXE_ID;
+        else if (woodcuttingLevel >= 11) return BLACK_AXE_ID;
+        else if (woodcuttingLevel >= 6) return STEEL_AXE_ID;
+        else return BRONZE_AXE_ID;
     }
 
-    private void switchToBankingStateForWoodcuttingEquipment(MainScript script) {
+    private void switchToBankingStateForWoodcuttingEquipment(MainScript script, int axeId) {
         script.log("Switching to banking state for woodcutting equipment");
         Map<Integer, Integer> requiredItemsForWoodcutting = new HashMap<>();
-        requiredItemsForWoodcutting.put(BRONZE_AXE_ID, 1);
-        script.setCurrentState(new BankingState(script, new BankingStrategy(requiredItemsForWoodcutting), this));
+        requiredItemsForWoodcutting.put(axeId, 1);
+        script.setCurrentState(new BankingState(script, new SwitchStateOrEquipmentBankingStrategy(requiredItemsForWoodcutting), this));
     }
 
-    private void executeWoodcuttingStrategy(MainScript script) throws InterruptedException {
-        strategy.execute(script);
+    public void switchToBankingState(MainScript script) {
+        script.log("Switching to banking state");
+        Set<Integer> itemsToKeep = new HashSet<>(); // Add items to keep if any
+        itemsToKeep.add(getBestAxeId(script.getSkills().getStatic(Skill.WOODCUTTING)));
+        BankingState bankingState = new BankingState(script, new DepositAllBankingStrategy(itemsToKeep), this);
+        script.setCurrentState(bankingState);
     }
 
     @Override

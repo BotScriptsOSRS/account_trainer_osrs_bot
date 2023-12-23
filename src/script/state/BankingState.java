@@ -15,12 +15,13 @@ public class BankingState implements BotState {
 
     @Override
     public void execute(MainScript script) throws InterruptedException {
+        script.log("Executing banking strategy");
         bankingStrategy.execute(script);
     }
 
     @Override
     public BotState nextState(MainScript script) {
-        // Return to the state that required banking
+        script.log("Returning to previous state after banking");
         return returnState;
     }
 }

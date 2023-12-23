@@ -1,11 +1,12 @@
-package script.strategy;
+package script.strategy.fishing;
 
 import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
+import script.strategy.TaskStrategy;
 
-public class FishingStrategy implements TaskStrategy {
+public class ShrimpsAndAnchoviesFishingStrategy implements TaskStrategy {
 
     private static final int SMALL_FISHING_NET_ID = 303;
     private static final int NET_FISHING_SPOT_ID = 1530;

@@ -6,13 +6,8 @@ import script.paint.OSDPainter;
 import script.state.BotState;
 import script.state.FishingState;
 import script.state.WoodcuttingState;
-import script.strategy.FishingStrategy;
-import script.strategy.TaskStrategy;
-import script.strategy.WoodcuttingStrategy;
-import script.util.TaskRegistry;
 
 import java.awt.*;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
@@ -23,30 +18,26 @@ public class MainScript extends Script {
     private BotState currentState;
     private boolean stateChanged;
     private OSDPainter osdPainter;
-    private TaskRegistry taskRegistry;
-    private Map<Class<? extends TaskStrategy>, Class<? extends BotState>> strategyStateMap;
+    private Map<Class<? extends BotState>, BotState> stateMap;
+
 
     @Override
     public void onStart() {
         osdPainter = new OSDPainter(this);
-        taskRegistry = new TaskRegistry();
-        strategyStateMap = new HashMap<>();
+        stateMap = new HashMap<>();
 
-        // Register strategies and corresponding states
-        registerStrategyWithState(WoodcuttingStrategy.class, WoodcuttingState.class);
-        registerStrategyWithState(FishingStrategy.class, FishingState.class);
-        // Add other strategies and states here
+        // Register states
+        registerState(WoodcuttingState.class);
+        registerState(FishingState.class);
+        // Add other states here
 
-        // Randomly pick initial state
         currentState = pickRandomState(null);
     }
 
-    private void registerStrategyWithState(Class<? extends TaskStrategy> strategyClass,
-                                           Class<? extends BotState> stateClass) {
+    private void registerState(Class<? extends BotState> stateClass) {
         try {
-            taskRegistry.registerTask(strategyClass.newInstance());
-            strategyStateMap.put(strategyClass, stateClass);
-        } catch (InstantiationException | IllegalAccessException e) {
+            stateMap.put(stateClass, stateClass.getDeclaredConstructor(MainScript.class).newInstance(this));
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }
@@ -69,25 +60,13 @@ public class MainScript extends Script {
 
     public BotState pickRandomState(BotState excludeState) {
         Random random = new Random();
-        List<Class<? extends TaskStrategy>> strategies = new ArrayList<>(strategyStateMap.keySet());
+        List<Class<? extends BotState>> states = new ArrayList<>(stateMap.keySet());
         BotState newState;
         do {
-            Class<? extends TaskStrategy> strategyClass = strategies.get(random.nextInt(strategies.size()));
-            Class<? extends BotState> stateClass = strategyStateMap.get(strategyClass);
-            newState = createState(strategyClass, stateClass);
+            Class<? extends BotState> stateClass = states.get(random.nextInt(states.size()));
+            newState = stateMap.get(stateClass);
         } while (newState.equals(excludeState));
         return newState;
-    }
-
-    private BotState createState(Class<? extends TaskStrategy> strategyClass, Class<? extends BotState> stateClass) {
-        try {
-            Constructor<? extends BotState> constructor = stateClass.getConstructor(MainScript.class, TaskStrategy.class);
-            TaskStrategy strategy = taskRegistry.getTask(strategyClass);
-            return constructor.newInstance(this, strategy);
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     @Override
