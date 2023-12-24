@@ -62,8 +62,8 @@ public class FishingState implements BotState {
         if (fishingLevel < 20 && !script.getInventory().contains(SMALL_FISHING_NET_ID)) {
             switchToBankingStateForFishingEquipment(script, SMALL_FISHING_NET_ID);
             return false;
-        } else if (fishingLevel < 40 && (!script.getInventory().contains(FLY_FISHING_ROD_ID) || !script.getInventory().contains(FEATHER_ID))) {
-            switchToBankingStateForFishingEquipment(script, FLY_FISHING_ROD_ID, FEATHER_ID) ;
+        } else if (fishingLevel >= 20 && fishingLevel < 40 && (!script.getInventory().contains(FLY_FISHING_ROD_ID) || !script.getInventory().contains(FEATHER_ID))) {
+            switchToBankingStateForFishingEquipment(script, FLY_FISHING_ROD_ID, FEATHER_ID);
             return false;
         } else if (fishingLevel >= 40 && (!script.getInventory().contains(LOBSTER_POT_ID) || !script.getInventory().contains(COINS_ID))) {
             switchToBankingStateForFishingEquipment(script, LOBSTER_POT_ID, COINS_ID);
