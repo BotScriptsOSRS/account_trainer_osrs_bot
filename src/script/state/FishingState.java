@@ -85,19 +85,30 @@ public class FishingState implements BotState {
     private void switchToBankingStateForFishingEquipment(MainScript script, List<Integer> currentRequiredItems) {
         script.log("Switching to banking state for fishing equipment");
 
+        // Set a random quantity for feathers, used for both current and future needs
+        int featherQuantity = new Random().nextInt(201) + 800; // Random quantity between 800 and 1000
+
         Map<Integer, Integer> requiredItemsForFishing = new HashMap<>();
         Map<Integer, Integer> futureFishingItemsMap = new HashMap<>();
 
         // Add currently required items for fishing
         for (int itemId : currentRequiredItems) {
-            requiredItemsForFishing.put(itemId, 1); // Assuming a quantity of 1 for each required item
+            int quantity = itemId == GameItem.FEATHER.getId() ? featherQuantity : 1; // Default quantity for most items
+
+            if (itemId == GameItem.COINS.getId()) {
+                quantity = new Random().nextInt(20001) + 30000; // Random quantity between 30,000 and 50,000 for coins
+            }
+
+            requiredItemsForFishing.put(itemId, quantity);
         }
 
-        // Prepare future fishing items based on fishing level
+        // Prepare future fishing items with appropriate quantities
         List<Integer> futureFishingItems = getFishingItemsToBuy();
         for (Integer futureItemId : futureFishingItems) {
+            int quantity = futureItemId == GameItem.FEATHER.getId() ? featherQuantity : 1; // Use the same feather quantity
+
             if (!script.getBank().contains(futureItemId)) {
-                futureFishingItemsMap.put(futureItemId, 1); // Add missing future items
+                futureFishingItemsMap.put(futureItemId, quantity);
             }
         }
 
