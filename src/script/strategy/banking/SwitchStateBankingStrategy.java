@@ -146,8 +146,8 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
             int quantity = entry.getValue();
             if (!withdrawSingleItem(script, itemId, quantity)) {
                 Item bankItem = script.getBank().getItem(itemId);
-                String itemName = bankItem != null ? bankItem.getName() : "Unknown Item";
-                script.log("Failed to withdraw required item: " + itemName + ". Logging out.");
+                String itemName = bankItem != null ? bankItem.getName() : String.valueOf(itemId);
+                script.log("Failed to withdraw required item with ID: " + itemName + ". Logging out.");
                 script.getLogoutTab().logOut();
                 script.stop();
                 return;
@@ -157,7 +157,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
 
     private boolean withdrawSingleItem(Script script, int itemId, int quantity) {
         Item bankItem = script.getBank().getItem(itemId);
-        String itemName = bankItem != null ? bankItem.getName() : "Unknown Item";
+        String itemName = bankItem != null ? bankItem.getName() : String.valueOf(itemId);
         int amountInInventory = (int) script.getInventory().getAmount(itemId);
         int amountToWithdraw = quantity - amountInInventory;
 
@@ -166,13 +166,13 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         }
 
         if (!script.getBank().contains(itemId)) {
-            script.log("Item " + itemName + " not found in the bank");
+            script.log("Item with ID: " + itemName + " not found in the bank");
             return false;
         }
 
         script.log("Withdrawing " + amountToWithdraw + " of " + itemName);
         if (!script.getBank().withdraw(itemId, amountToWithdraw)) {
-            script.log("Failed to withdraw " + itemName);
+            script.log("Failed to withdraw item with ID: " + itemName);
             return false;
         }
 
