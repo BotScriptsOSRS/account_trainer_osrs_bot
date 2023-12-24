@@ -62,7 +62,7 @@ public class QuickExchange extends MethodProvider {
         // Return true if any box is empty
         return boxesToCheck.stream().anyMatch(box -> getGrandExchange().getStatus(box) == GrandExchange.Status.EMPTY);
     }
-
+    
     public boolean quickBuy(String itemName, int amount, boolean withdrawToBank) throws InterruptedException {
         if (itemName == null)
             return false;
