@@ -2,7 +2,7 @@ package script.state;
 
 import org.osbot.rs07.api.ui.Skill;
 import script.MainScript;
-import script.strategy.banking.SwitchStateOrEquipmentBankingStrategy;
+import script.strategy.banking.SwitchStateBankingStrategy;
 import script.strategy.TaskStrategy;
 import script.strategy.fishing.FlyFishingStrategy;
 import script.strategy.fishing.LobsterPotFishingStrategy;
@@ -14,7 +14,7 @@ import java.util.Random;
 
 public class FishingState implements BotState {
     private TaskStrategy strategy;
-    private final long switchTime;
+    private long switchTime;
 
     // Fishing item IDs
     private static final int SMALL_FISHING_NET_ID = 303;
@@ -28,9 +28,6 @@ public class FishingState implements BotState {
 
     public FishingState(MainScript script) {
         updateStrategy(script);
-        long startTime = System.currentTimeMillis();
-        this.switchTime = startTime + (long) (3600000 + Math.random() * 3600000);
-        script.log("Entering fishing state");
     }
 
     @Override
@@ -40,6 +37,12 @@ public class FishingState implements BotState {
         }
         updateStrategy(script);
         strategy.execute(script);
+    }
+
+    @Override
+    public void enterState(MainScript script) {
+        script.log("Entering fishing state");
+        this.switchTime = System.currentTimeMillis() + (long) (3600000 + Math.random() * 3600000); // 1 to 2 hours
     }
 
     private void updateStrategy(MainScript script) {
@@ -77,13 +80,13 @@ public class FishingState implements BotState {
 
             // Apply random quantity only to feathers and coins
             if (itemId == FEATHER_ID || itemId == COINS_ID) {
-                // Generate a random quantity between 100,000 and 1,000,000
-                quantity = random.nextInt(900001) + 100000; // (max - min + 1) + min
+                // Generate a random quantity between 30,000 and 50,000
+                quantity = random.nextInt(20001) + 30000;
             }
 
             requiredItemsForFishing.put(itemId, quantity);
         }
-        script.setCurrentState(new BankingState(script, new SwitchStateOrEquipmentBankingStrategy(requiredItemsForFishing), this));
+        script.setCurrentState(new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForFishing), this));
     }
 
     @Override

@@ -10,11 +10,11 @@ import script.strategy.TaskStrategy;
 
 import java.util.Map;
 
-public class SwitchStateOrEquipmentBankingStrategy implements TaskStrategy {
+public class SwitchStateBankingStrategy implements TaskStrategy {
     private final Map<Integer, Integer> requiredItems;
-    private final int SLEEP_DURATION_MS = 2000;
+    private final int SLEEP_DURATION_MS = 5000;
 
-    public SwitchStateOrEquipmentBankingStrategy(Map<Integer, Integer> requiredItems) {
+    public SwitchStateBankingStrategy(Map<Integer, Integer> requiredItems) {
         this.requiredItems = requiredItems;
     }
 

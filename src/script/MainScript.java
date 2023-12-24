@@ -66,6 +66,8 @@ public class MainScript extends Script {
             Class<? extends BotState> stateClass = states.get(random.nextInt(states.size()));
             newState = stateMap.get(stateClass);
         } while (newState.equals(excludeState));
+
+        newState.enterState(this);
         return newState;
     }
 

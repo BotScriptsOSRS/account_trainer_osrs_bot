@@ -3,7 +3,7 @@ package script.state;
 import org.osbot.rs07.api.ui.Skill;
 import script.MainScript;
 import script.strategy.banking.DepositAllBankingStrategy;
-import script.strategy.banking.SwitchStateOrEquipmentBankingStrategy;
+import script.strategy.banking.SwitchStateBankingStrategy;
 import script.strategy.TaskStrategy;
 import script.strategy.woodcutting.OakWoodcuttingStrategy;
 import script.strategy.woodcutting.TreeWoodcuttingStrategy;
@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class WoodcuttingState implements BotState {
     private TaskStrategy strategy;
-    private final long switchTime;
+    private long switchTime;
 
     // Axe item IDs
     private static final int BRONZE_AXE_ID = 1351;
@@ -28,9 +28,6 @@ public class WoodcuttingState implements BotState {
 
     public WoodcuttingState(MainScript script) {
         updateStrategy(script);
-        long startTime = System.currentTimeMillis();
-        this.switchTime = startTime + (long) (3600000 + Math.random() * 3600000);
-        script.log("Entering woodcutting state");
     }
 
     @Override
@@ -40,6 +37,12 @@ public class WoodcuttingState implements BotState {
         }
         updateStrategy(script);
         strategy.execute(script);
+    }
+
+    @Override
+    public void enterState(MainScript script) {
+        script.log("Entering woodcutting state");
+        this.switchTime = System.currentTimeMillis() + (long) (3600000 + Math.random() * 3600000); // 1 to 2 hours
     }
 
     private void updateStrategy(MainScript script) {
@@ -78,7 +81,7 @@ public class WoodcuttingState implements BotState {
         script.log("Switching to banking state for woodcutting equipment");
         Map<Integer, Integer> requiredItemsForWoodcutting = new HashMap<>();
         requiredItemsForWoodcutting.put(axeId, 1);
-        script.setCurrentState(new BankingState(script, new SwitchStateOrEquipmentBankingStrategy(requiredItemsForWoodcutting), this));
+        script.setCurrentState(new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForWoodcutting), this));
     }
 
     public void switchToBankingState(MainScript script) {

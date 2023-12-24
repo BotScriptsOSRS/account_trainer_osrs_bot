@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class DepositAllBankingStrategy implements TaskStrategy {
     private final Set<Integer> itemsToKeep;
-    private final int SLEEP_DURATION_MS = 2000;
+    private final int SLEEP_DURATION_MS = 5000;
 
     public DepositAllBankingStrategy(Set<Integer> itemsToKeep) {
         this.itemsToKeep = itemsToKeep;
@@ -39,7 +39,7 @@ public class DepositAllBankingStrategy implements TaskStrategy {
         performBankingActions(script);
     }
 
-    private void performBankingActions(Script script) throws InterruptedException {
+    private void performBankingActions(Script script) {
         depositAllExceptItemsToKeep(script);
         closeBank(script);
     }
@@ -103,7 +103,7 @@ public class DepositAllBankingStrategy implements TaskStrategy {
         return false;
     }
 
-    private void depositAllExceptItemsToKeep(Script script) throws InterruptedException {
+    private void depositAllExceptItemsToKeep(Script script) {
         script.log("Depositing all items except specified items to keep");
         for (Item item : script.getInventory().getItems()) {
             if (item != null && !itemsToKeep.contains(item.getId())) {
