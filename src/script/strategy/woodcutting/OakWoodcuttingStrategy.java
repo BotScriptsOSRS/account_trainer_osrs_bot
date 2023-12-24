@@ -37,7 +37,7 @@ public class OakWoodcuttingStrategy implements TaskStrategy {
 
     private void walkToWoodcuttingArea(Script script) {
         script.log("Walking to woodcutting area");
-        script.getWalking().webWalk(woodcuttingArea.getRandomPosition());
+        script.getWalking().webWalk(woodcuttingArea);
     }
 
     private void handleFullInventory(Script script) {

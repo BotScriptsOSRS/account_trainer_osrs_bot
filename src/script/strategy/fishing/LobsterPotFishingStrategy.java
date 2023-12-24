@@ -22,7 +22,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     @Override
     public void execute(Script script) {
         if (!isInFishingArea(script)) {
-            walkToFishArea(script);
+            walkToFishingArea(script);
         }
 
         if (script.getInventory().isFull()) {
@@ -36,7 +36,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
         return fishingArea.contains(script.myPlayer());
     }
 
-    private void walkToFishArea(Script script) {
+    private void walkToFishingArea(Script script) {
         script.log("Walking to lobster pot fishing area");
         script.getWalking().webWalk(fishingArea);
     }
