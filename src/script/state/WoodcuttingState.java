@@ -8,23 +8,13 @@ import script.strategy.TaskStrategy;
 import script.strategy.woodcutting.OakWoodcuttingStrategy;
 import script.strategy.woodcutting.TreeWoodcuttingStrategy;
 import script.strategy.woodcutting.YewWoodcuttingStrategy;
+import script.utils.GameItem;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class WoodcuttingState implements BotState {
     private TaskStrategy strategy;
     private long switchTime;
-
-    // Axe item IDs
-    private static final int BRONZE_AXE_ID = 1351;
-    private static final int STEEL_AXE_ID = 1353;
-    private static final int BLACK_AXE_ID = 1361;
-    private static final int MITHRIL_AXE_ID = 1355;
-    private static final int ADAMANT_AXE_ID = 1357;
-    private static final int RUNE_AXE_ID = 1359;
 
     public WoodcuttingState(MainScript script) {
         updateStrategy(script);
@@ -58,30 +48,49 @@ public class WoodcuttingState implements BotState {
         }
     }
 
+    private int getBestAxeId(int woodcuttingLevel) {
+        if (woodcuttingLevel >= 41) return GameItem.RUNE_AXE.getId();
+        else if (woodcuttingLevel >= 31) return GameItem.ADAMANT_AXE.getId();
+        else if (woodcuttingLevel >= 21) return GameItem.MITHRIL_AXE.getId();
+        else if (woodcuttingLevel >= 11) return GameItem.BLACK_AXE.getId();
+        else if (woodcuttingLevel >= 6) return GameItem.STEEL_AXE.getId();
+        else return GameItem.BRONZE_AXE.getId();
+    }
+
     private boolean checkWoodcuttingEquipment(MainScript script) {
         int woodcuttingLevel = script.getSkills().getStatic(Skill.WOODCUTTING);
-        int bestAxeId = getBestAxeId(woodcuttingLevel);
-        if (!script.getInventory().contains(bestAxeId) && !script.getEquipment().contains(bestAxeId)) {
-            switchToBankingStateForWoodcuttingEquipment(script, bestAxeId);
+        List<Integer> axesToBuy = getAxesToBuy();
+        int currentAxeId = getBestAxeId(woodcuttingLevel);
+
+        if (!script.getInventory().contains(currentAxeId) && !script.getEquipment().contains(currentAxeId)) {
+            switchToBankingStateForWoodcuttingEquipment(script, currentAxeId,axesToBuy);
             return false;
         }
         return true;
     }
 
-    private int getBestAxeId(int woodcuttingLevel) {
-        if (woodcuttingLevel >= 41) return RUNE_AXE_ID;
-        else if (woodcuttingLevel >= 31) return ADAMANT_AXE_ID;
-        else if (woodcuttingLevel >= 21) return MITHRIL_AXE_ID;
-        else if (woodcuttingLevel >= 11) return BLACK_AXE_ID;
-        else if (woodcuttingLevel >= 6) return STEEL_AXE_ID;
-        else return BRONZE_AXE_ID;
+    private List<Integer> getAxesToBuy() {
+        return new ArrayList<>(Arrays.asList(GameItem.BRONZE_AXE.getId(), GameItem.STEEL_AXE.getId(), GameItem.BLACK_AXE.getId(), GameItem.MITHRIL_AXE.getId(), GameItem.ADAMANT_AXE.getId(), GameItem.RUNE_AXE.getId()));
     }
 
-    private void switchToBankingStateForWoodcuttingEquipment(MainScript script, int axeId) {
+    private void switchToBankingStateForWoodcuttingEquipment(MainScript script, int currentAxeId, List<Integer> futureAxeIds) {
         script.log("Switching to banking state for woodcutting equipment");
+
         Map<Integer, Integer> requiredItemsForWoodcutting = new HashMap<>();
-        requiredItemsForWoodcutting.put(axeId, 1);
-        script.setCurrentState(new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForWoodcutting), this));
+        Map<Integer, Integer> futureAxeIdsMap = new HashMap<>();
+        // Add the current axe needed for woodcutting
+        requiredItemsForWoodcutting.put(currentAxeId, 1);
+
+        // Check for future axes in the bank and add them to the required items if missing
+        for (Integer futureAxeId : futureAxeIds) {
+            if (!script.getBank().contains(futureAxeId)) {
+                futureAxeIdsMap.put(futureAxeId, 1);
+            }
+        }
+
+        // Switch to banking state with the strategy to handle the required items
+        BankingState returnBankingState = new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForWoodcutting, futureAxeIdsMap, this), this);
+        script.setCurrentState(new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForWoodcutting, futureAxeIdsMap, returnBankingState), this));
     }
 
     public void switchToBankingState(MainScript script) {

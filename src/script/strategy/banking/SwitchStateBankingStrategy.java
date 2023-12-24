@@ -4,19 +4,50 @@ import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Item;
 import org.osbot.rs07.api.ui.Skill;
+import org.osbot.rs07.script.MethodProvider;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
+import script.MainScript;
+import script.state.BotState;
+import script.state.GrandExchangeState;
 import script.strategy.TaskStrategy;
+import script.strategy.grand_exchange.BuyGrandExchangeStrategy;
+import script.utils.GameItem;
 
+import java.util.HashMap;
 import java.util.Map;
 
-public class SwitchStateBankingStrategy implements TaskStrategy {
-    private final Map<Integer, Integer> requiredItems;
-    private final int SLEEP_DURATION_MS = 5000;
+import static org.osbot.rs07.script.MethodProvider.random;
 
-    public SwitchStateBankingStrategy(Map<Integer, Integer> requiredItems) {
-        this.requiredItems = requiredItems;
+public class SwitchStateBankingStrategy implements TaskStrategy {
+    private final Map<String, Integer> itemsToBuyInAdvance;
+    private final int SLEEP_DURATION_MS = 5000;
+    private final BotState returnState;
+    private final Map<String, Integer> requiredBankItems;
+
+    public SwitchStateBankingStrategy(Map<Integer, Integer> requiredBankItems, Map<Integer, Integer> itemsToBuyInAdvance, BotState returnState) {
+        this.requiredBankItems = new HashMap<>();
+        this.itemsToBuyInAdvance = new HashMap<>();
+
+        // Processing required items from the bank
+        requiredBankItems.forEach((id, quantity) -> {
+            String itemName = GameItem.getNameById(id);
+            if (itemName != null) {
+                this.requiredBankItems.put(itemName, quantity);
+            }
+        });
+
+        // Processing items to buy
+        itemsToBuyInAdvance.forEach((id, quantity) -> {
+            String itemName = GameItem.getNameById(id);
+            if (itemName != null) {
+                this.itemsToBuyInAdvance.put(itemName, quantity);
+            }
+        });
+
+        this.returnState = returnState;
     }
+
 
     private final Area[] BANKS = {
             Banks.LUMBRIDGE_UPPER,
@@ -34,6 +65,12 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     public void execute(Script script) throws InterruptedException {
         if (!prepareForBanking(script)) {
             script.log("Failed to prepare for banking.");
+            return;
+        }
+
+        if (!areAllItemsAvailable(script)) {
+            script.log("Not all required items are available in the bank.");
+            handleMissingItems(script);
             return;
         }
 
@@ -79,6 +116,27 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         }
         script.log("Failed to open bank after multiple attempts");
         return false;
+    }
+
+    private boolean areAllItemsAvailable(Script script) throws InterruptedException {
+        for (Map.Entry<String, Integer> entry : requiredBankItems.entrySet()) {
+            String itemName = entry.getKey();
+            int requiredQuantity = entry.getValue();
+
+            MethodProvider.sleep(random(1000, 1500));
+
+            int amountInInventory = (int) script.getInventory().getAmount(itemName);
+            int amountEquipped = (int) script.getEquipment().getAmount(itemName);
+            int totalAmount = amountInInventory + amountEquipped;
+
+            if (totalAmount < requiredQuantity) {
+                Item bankItem = script.getBank().getItem(itemName);
+                if (bankItem == null || bankItem.getAmount() < (requiredQuantity - totalAmount)) {
+                    return false; // Not enough items in bank, inventory, or equipment
+                }
+            }
+        }
+        return true;
     }
 
     private boolean openBank(Script script) throws InterruptedException {
@@ -134,59 +192,103 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private void withdrawRequiredItems(Script script) throws InterruptedException {
-        if (!script.getBank().isOpen()) {
-            script.log("Bank not open for withdrawal");
-            if (!openBankWithRetry(script)) {
-                script.log("Unable to open the bank for withdrawal");
-                return;
-            }
+        if (!openBankIfNeeded(script)) {
+            return;
         }
-        for (Map.Entry<Integer, Integer> entry : requiredItems.entrySet()) {
-            int itemId = entry.getKey();
+
+        for (Map.Entry<String, Integer> entry : requiredBankItems.entrySet()) {
+            String itemName = entry.getKey();
             int quantity = entry.getValue();
-            if (!withdrawSingleItem(script, itemId, quantity)) {
-                Item bankItem = script.getBank().getItem(itemId);
-                String itemName = bankItem != null ? bankItem.getName() : String.valueOf(itemId);
-                script.log("Failed to withdraw required item with ID: " + itemName + ". Logging out.");
-                script.getLogoutTab().logOut();
-                script.stop();
-                return;
+            int itemId = GameItem.getIdByName(itemName); // Convert name to ID
+            if (itemId != -1) {
+                withdrawSingleItem(script, itemId, quantity);
             }
         }
     }
 
-    private boolean withdrawSingleItem(Script script, int itemId, int quantity) {
+    private boolean openBankIfNeeded(Script script) throws InterruptedException {
+        if (!script.getBank().isOpen()) {
+            script.log("Bank not open for withdrawal");
+            return openBankWithRetry(script);
+        }
+        return true;
+    }
+
+    private void handleMissingItems(Script script) {
+        Map<String, Integer> itemsToBuy = new HashMap<>();
+
+        for (Map.Entry<String, Integer> entry : itemsToBuyInAdvance.entrySet()) {
+            String itemName = entry.getKey();
+            int requiredQuantity = entry.getValue();
+
+            int amountInInventory = (int) script.getInventory().getAmount(itemName);
+            int amountEquipped = (int) script.getEquipment().getAmount(itemName);
+            Item bankItem = script.getBank().getItem(itemName);
+            int amountInBank = bankItem != null ? bankItem.getAmount() : 0;
+
+            int totalAmount = amountInInventory + amountEquipped + amountInBank;
+
+            if (totalAmount < requiredQuantity) {
+                int amountNeeded = requiredQuantity - totalAmount;
+                itemsToBuy.put(itemName, amountNeeded);
+            }
+        }
+
+        if (!itemsToBuy.isEmpty()) {
+            withdrawAllCoins(script);
+            closeBank(script);
+            script.log("Transitioning to Grand Exchange State to buy missing items.");
+            TaskStrategy grandExchangeStrategy = new BuyGrandExchangeStrategy(itemsToBuy);
+            ((MainScript) script).setCurrentState(new GrandExchangeState((MainScript) script, grandExchangeStrategy, returnState));
+        }
+    }
+
+
+    private void withdrawAllCoins(Script script) {
+        if (script.getBank().isOpen()) {
+            script.log("Withdrawing all coins");
+            script.getBank().withdrawAll("Coins");
+            new ConditionalSleep(SLEEP_DURATION_MS) {
+                @Override
+                public boolean condition() {
+                    return script.getInventory().contains("Coins");
+                }
+            }.sleep();
+        }
+    }
+
+    private void withdrawSingleItem(Script script, int itemId, int quantity) {
         Item bankItem = script.getBank().getItem(itemId);
         String itemName = bankItem != null ? bankItem.getName() : String.valueOf(itemId);
         int amountInInventory = (int) script.getInventory().getAmount(itemId);
         int amountToWithdraw = quantity - amountInInventory;
 
         if (amountToWithdraw <= 0) {
-            return true;
+            return;
         }
 
         if (!script.getBank().contains(itemId)) {
-            script.log("Item with ID: " + itemName + " not found in the bank");
-            return false;
+            script.log("Item with ID: " + itemId + " not found in bank. Skipping withdrawal.");
+            return;
         }
 
         script.log("Withdrawing " + amountToWithdraw + " of " + itemName);
-        if (!script.getBank().withdraw(itemId, amountToWithdraw)) {
-            script.log("Failed to withdraw item with ID: " + itemName);
-            return false;
+        if (script.getBank().withdraw(itemId, amountToWithdraw)) {
+            new ConditionalSleep(SLEEP_DURATION_MS) {
+                @Override
+                public boolean condition() {
+                    return script.getInventory().contains(itemId);
+                }
+            }.sleep();
         }
-
-        return new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return script.getInventory().contains(itemId);
-            }
-        }.sleep();
     }
 
     private void equipItems(Script script) {
-        for (int itemId : requiredItems.keySet()) {
-            equipItemIfPresent(script, itemId);
+        for (String itemName : requiredBankItems.keySet()) {
+            int itemId = GameItem.getIdByName(itemName); // Convert name to ID
+            if (itemId != -1) {
+                equipItemIfPresent(script, itemId);
+            }
         }
     }
 
