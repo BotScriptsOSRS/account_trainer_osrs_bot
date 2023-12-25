@@ -8,12 +8,10 @@ import script.strategy.TaskStrategy;
 
 public class SmallNetFishingStrategy implements TaskStrategy {
 
-    private final int fishingNetId;
     private static final int NET_FISHING_SPOT_ID = 1530;
     private final Area fishingArea = new Area(3237, 3139, 3249, 3162);
 
-    public SmallNetFishingStrategy(int fishingNetId) {
-        this.fishingNetId = fishingNetId;
+    public SmallNetFishingStrategy() {
     }
 
     @Override
@@ -40,7 +38,7 @@ public class SmallNetFishingStrategy implements TaskStrategy {
 
     private void handleFullInventory(Script script) {
         script.log("Inventory full, dropping fish");
-        script.getInventory().dropAllExcept(fishingNetId);
+        script.getInventory().dropAll("Raw shrimps", "Raw anchovies");
     }
 
     private void startFishing(Script script) {

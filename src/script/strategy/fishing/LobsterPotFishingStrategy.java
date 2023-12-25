@@ -1,17 +1,31 @@
 package script.strategy.fishing;
 
 import org.osbot.rs07.api.map.Area;
+import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.api.model.NPC;
+import org.osbot.rs07.script.MethodProvider;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+
+import java.util.Arrays;
 
 public class LobsterPotFishingStrategy implements TaskStrategy {
 
     private final int lobsterPotId;
     private final int coinsId;
     private static final int LOBSTER_POT_FISHING_SPOT_ID = 1522;
+    private static final int SLEEP_MIN_MS = 7000;
+    private static final int SLEEP_MAX_MS = 9000;
+    private static final int PLANK_ID = 2082;
+    private static final int NPC_ID_FOR_DEPOSIT = 3648;
+    private static final int PLANK_ID_FOR_DEPOSIT = 2084;
+    private static final int[] NPC_IDS = {3644, 3645, 3646};
+    private static final Area FULL_INVENTORY_AREA = new Area(2950, 3144, 2961, 3152);
     private final Area fishingArea = new Area(2921, 3175, 2927, 3181);
+
+    private final Area portSarimArea = new Area(3026, 3216, 3029, 3219);
+    private final Area karamjaArea = new Area(2962, 3145, 2912, 3182);
     private final Area depositBoxArea = new Area(3043, 3234, 3046, 3237);
 
     public LobsterPotFishingStrategy(int lobsterPotId, int coinsId) {
@@ -20,8 +34,8 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     }
 
     @Override
-    public void execute(Script script) {
-        if (!isInFishingArea(script)) {
+    public void execute(Script script) throws InterruptedException {
+        if (!isInFishingArea(script) && !script.getInventory().isFull()) {
             walkToFishingArea(script);
         }
 
@@ -36,15 +50,110 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
         return fishingArea.contains(script.myPlayer());
     }
 
-    private void walkToFishingArea(Script script) {
+    private void walkToFishingArea(Script script) throws InterruptedException {
         script.log("Walking to lobster pot fishing area");
+        if (karamjaArea.contains(script.myPlayer())) {
+            script.getWalking().webWalk(fishingArea);
+        } else {
+            script.getWalking().webWalk(portSarimArea);
+            handleDialoguePortSarim(script);
+        }
+    }
+
+    private void handleDialoguePortSarim(Script script) throws InterruptedException {
+        script.log("Handling dialogue in Port Sarim");
+        NPC closestNpc = getClosestNpc(script, NPC_IDS);
+
+        if (closestNpc != null && closestNpc.interact("Pay-fare")) {
+            waitForDialogue(script);
+            completeDialogueAndCrossPlank(script);
+        }
+    }
+
+    private NPC getClosestNpc(Script script, int[] npcIds) {
+        return script.getNpcs().closest(npc -> npc != null && Arrays.stream(npcIds).anyMatch(id -> id == npc.getId()));
+    }
+
+    private void waitForDialogue(Script script) {
+        new ConditionalSleep(5000, 500) {
+            @Override
+            public boolean condition() {
+                return script.getDialogues().inDialogue();
+            }
+        }.sleep();
+    }
+
+    private void completeDialogueAndCrossPlank(Script script) throws InterruptedException {
+        if (script.getDialogues().isPendingContinuation()) {
+            script.getDialogues().completeDialogue("Yes please.");
+            MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
+            Entity plank = script.getObjects().closest(PLANK_ID);
+            if (plank != null && plank.interact("Cross")) {
+                waitForArrivalInKaramja(script);
+            }
+        }
+    }
+
+    private void waitForArrivalInKaramja(Script script) {
+        new ConditionalSleep(10000, 500) {
+            @Override
+            public boolean condition() {
+                return karamjaArea.contains(script.myPlayer());
+            }
+        }.sleep();
+
         script.getWalking().webWalk(fishingArea);
     }
 
-    private void handleFullInventory(Script script) {
+    private int random(int min, int max) {
+        return (int) (min + Math.random() * (max - min + 1));
+    }
+
+    private void handleFullInventory(Script script) throws InterruptedException {
         script.log("Inventory full, walking to deposit box");
-        script.getWalking().webWalk(depositBoxArea);
-        depositItems(script);
+        if (!FULL_INVENTORY_AREA.contains(script.myPlayer())){
+            script.getWalking().webWalk(FULL_INVENTORY_AREA);
+        }
+        interactWithNpcForDeposit(script);
+        crossPlankAndDepositItems(script);
+    }
+
+    private void interactWithNpcForDeposit(Script script) throws InterruptedException {
+        if (!script.getDialogues().inDialogue()) {
+            NPC npcForDeposit = script.getNpcs().closest(NPC_ID_FOR_DEPOSIT);
+            if (npcForDeposit != null && npcForDeposit.interact("Pay-fare")) {
+                waitForDialogue(script);
+                completeDialogueForDeposit(script);
+            }
+        } else {
+            completeDialogueAndCrossPlank(script);
+        }
+    }
+    private void completeDialogueForDeposit(Script script) throws InterruptedException {
+        String[] dialogueOptions = {"Can I journey on this ship?",
+                "Search away, I have nothing to hide.", "Ok."};
+        if (script.getDialogues().isPendingContinuation()) {
+            script.getDialogues().completeDialogue(dialogueOptions);
+            MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
+        }
+    }
+
+    private void crossPlankAndDepositItems(Script script) {
+        Entity plankForDeposit = script.getObjects().closest(PLANK_ID_FOR_DEPOSIT);
+        if (plankForDeposit != null && plankForDeposit.interact("Cross")) {
+            waitForArrivalInPortSarim(script);
+            script.getWalking().webWalk(depositBoxArea);
+            depositItems(script);
+        }
+    }
+
+    private void waitForArrivalInPortSarim(Script script) {
+        new ConditionalSleep(10000, 500) {
+            @Override
+            public boolean condition() {
+                return portSarimArea.contains(script.myPlayer());
+            }
+        }.sleep();
     }
 
     private void depositItems(Script script) {

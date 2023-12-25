@@ -23,7 +23,7 @@ public class YewWoodcuttingStrategy implements TaskStrategy {
     }
     @Override
     public void execute(Script script) {
-        if (!isInWoodcuttingArea(script)) {
+        if (!isInWoodcuttingArea(script) && !script.getInventory().isFull()) {
             walkToWoodcuttingArea(script);
         } else if (script.getInventory().isFull()) {
             handleFullInventory(script);

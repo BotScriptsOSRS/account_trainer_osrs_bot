@@ -8,14 +8,10 @@ import script.strategy.TaskStrategy;
 
 public class FlyFishingStrategy implements TaskStrategy {
 
-    private final int flyFishingRodId;
-    private final int featherId;
     private static final int FLY_FISHING_SPOT_ID = 1526;
     private final Area fishingArea = new Area(3100, 3423, 3110, 3436);
 
-    public FlyFishingStrategy(int flyFishingRodId, int featherId) {
-        this.flyFishingRodId = flyFishingRodId;
-        this.featherId = featherId;
+    public FlyFishingStrategy() {
     }
 
     @Override
@@ -42,7 +38,7 @@ public class FlyFishingStrategy implements TaskStrategy {
 
     private void handleFullInventory(Script script) {
         script.log("Inventory full, dropping fish");
-        script.getInventory().dropAllExcept(flyFishingRodId, featherId);
+        script.getInventory().dropAll("Raw trout", "Raw salmon");
     }
 
     private void startFishing(Script script) {

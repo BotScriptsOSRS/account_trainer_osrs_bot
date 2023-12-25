@@ -37,9 +37,9 @@ public class FishingState implements BotState {
     private void updateStrategy(MainScript script) {
         int fishingLevel = script.getSkills().getStatic(Skill.FISHING);
         if (fishingLevel < 20) {
-            this.strategy = new SmallNetFishingStrategy(GameItem.SMALL_FISHING_NET.getId());
+            this.strategy = new SmallNetFishingStrategy();
         } else if (fishingLevel < 40) {
-            this.strategy = new FlyFishingStrategy(GameItem.FLY_FISHING_ROD.getId(), GameItem.FEATHER.getId());
+            this.strategy = new FlyFishingStrategy();
         } else {
             this.strategy = new LobsterPotFishingStrategy(GameItem.LOBSTER_POT.getId(), GameItem.COINS.getId());
         }
@@ -68,6 +68,7 @@ public class FishingState implements BotState {
             requiredItems.add(GameItem.FEATHER.getId());
         } else {
             requiredItems.add(GameItem.LOBSTER_POT.getId());
+            requiredItems.add(GameItem.COINS.getId());
         }
 
         return requiredItems;
@@ -107,7 +108,7 @@ public class FishingState implements BotState {
         for (Integer futureItemId : futureFishingItems) {
             int quantity = futureItemId == GameItem.FEATHER.getId() ? featherQuantity : 1; // Use the same feather quantity
 
-            if (!script.getBank().contains(futureItemId)) {
+            if (!script.getBank().contains(futureItemId) && futureItemId != GameItem.COINS.getId()) {
                 futureFishingItemsMap.put(futureItemId, quantity);
             }
         }
