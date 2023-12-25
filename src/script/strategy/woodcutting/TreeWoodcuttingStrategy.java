@@ -11,7 +11,6 @@ public class TreeWoodcuttingStrategy implements TaskStrategy {
 
     private final int bestAxeId;
     private final Area woodcuttingArea = new Area(3154, 3206, 3206, 3262);
-    private final Area walkToWoodcuttingArea = new Area(3196, 3222, 3199, 3224);
     private final Position safePosition = new Position(3194, 3241, 0);
 
     public TreeWoodcuttingStrategy(int bestAxeId) {
@@ -45,7 +44,7 @@ public class TreeWoodcuttingStrategy implements TaskStrategy {
 
     private void walkToWoodcuttingArea(Script script) {
         script.log("Walking to woodcutting area");
-        script.getWalking().webWalk(walkToWoodcuttingArea);
+        script.getWalking().webWalk(woodcuttingArea);
     }
 
     private void handleFullInventory(Script script) {

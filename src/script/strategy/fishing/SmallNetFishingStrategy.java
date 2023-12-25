@@ -11,7 +11,6 @@ public class SmallNetFishingStrategy implements TaskStrategy {
     private final int fishingNetId;
     private static final int NET_FISHING_SPOT_ID = 1530;
     private final Area fishingArea = new Area(3237, 3139, 3249, 3162);
-    private final Area walkToFishingArea = new Area(3240, 3152, 3243, 3154);
 
     public SmallNetFishingStrategy(int fishingNetId) {
         this.fishingNetId = fishingNetId;
@@ -36,7 +35,7 @@ public class SmallNetFishingStrategy implements TaskStrategy {
 
     private void walkToFishingArea(Script script) {
         script.log("Walking to fishing area");
-        script.getWalking().webWalk(walkToFishingArea);
+        script.getWalking().webWalk(fishingArea);
     }
 
     private void handleFullInventory(Script script) {

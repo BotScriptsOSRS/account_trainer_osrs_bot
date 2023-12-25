@@ -13,7 +13,7 @@ public class YewWoodcuttingStrategy implements TaskStrategy {
     private final int bestAxeId;
     private final MainScript mainScript;
     private final Area woodcuttingArea = new Area(3085, 3482, 3089, 3468);
-    private final Area walkToWoodcuttingArea = new Area(3086, 3477, 3087, 3472);
+
     private final WoodcuttingState woodcuttingState;
 
     public YewWoodcuttingStrategy(MainScript mainScript, int bestAxeId, WoodcuttingState woodcuttingState) {
@@ -38,7 +38,7 @@ public class YewWoodcuttingStrategy implements TaskStrategy {
 
     private void walkToWoodcuttingArea(Script script) {
         script.log("Walking to woodcutting area");
-        script.getWalking().webWalk(walkToWoodcuttingArea);
+        script.getWalking().webWalk(woodcuttingArea);
     }
 
     private void handleFullInventory(Script script) {

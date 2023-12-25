@@ -13,7 +13,6 @@ public class OakWoodcuttingStrategy implements TaskStrategy {
     private final int bestAxeId;
     private final MainScript mainScript; // Add reference to MainScript
     private final Area woodcuttingArea = new Area(3103, 3241, 3098, 3245);
-    private final Area walkToWoodcuttingArea = new Area(3098, 3245, 3102, 3245);
     private final WoodcuttingState woodcuttingState;
 
     public OakWoodcuttingStrategy(MainScript mainScript, int bestAxeId, WoodcuttingState woodcuttingState) {
@@ -38,7 +37,7 @@ public class OakWoodcuttingStrategy implements TaskStrategy {
 
     private void walkToWoodcuttingArea(Script script) {
         script.log("Walking to woodcutting area");
-        script.getWalking().webWalk(walkToWoodcuttingArea);
+        script.getWalking().webWalk(woodcuttingArea);
     }
 
     private void handleFullInventory(Script script) {

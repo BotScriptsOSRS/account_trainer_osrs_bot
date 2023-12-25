@@ -12,7 +12,7 @@ public class FlyFishingStrategy implements TaskStrategy {
     private final int featherId;
     private static final int FLY_FISHING_SPOT_ID = 1526;
     private final Area fishingArea = new Area(3100, 3423, 3110, 3436);
-    private final Area walkToFishingArea = new Area(3104, 3431, 3105, 3435);
+
     public FlyFishingStrategy(int flyFishingRodId, int featherId) {
         this.flyFishingRodId = flyFishingRodId;
         this.featherId = featherId;
@@ -37,7 +37,7 @@ public class FlyFishingStrategy implements TaskStrategy {
 
     private void walkToFishingArea(Script script) {
         script.log("Walking to fly fishing area");
-        script.getWalking().webWalk(walkToFishingArea);
+        script.getWalking().webWalk(fishingArea);
     }
 
     private void handleFullInventory(Script script) {
