@@ -15,8 +15,8 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     private final int lobsterPotId;
     private final int coinsId;
     private static final int LOBSTER_POT_FISHING_SPOT_ID = 1522;
-    private static final int SLEEP_MIN_MS = 7000;
-    private static final int SLEEP_MAX_MS = 9000;
+    private static final int SLEEP_MIN_MS = 8500;
+    private static final int SLEEP_MAX_MS = 10000;
     private static final int PLANK_ID = 2082;
     private static final int NPC_ID_FOR_DEPOSIT = 3648;
     private static final int PLANK_ID_FOR_DEPOSIT = 2084;
