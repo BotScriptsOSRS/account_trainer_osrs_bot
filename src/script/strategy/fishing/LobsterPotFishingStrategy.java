@@ -126,7 +126,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
                 completeDialogueForDeposit(script);
             }
         } else {
-            completeDialogueAndCrossPlank(script);
+            completeDialogueForDeposit(script);
         }
     }
     private void completeDialogueForDeposit(Script script) throws InterruptedException {
