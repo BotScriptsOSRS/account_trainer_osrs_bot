@@ -62,7 +62,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
 
     private void handleDialoguePortSarim(Script script) throws InterruptedException {
         script.log("Handling dialogue in Port Sarim");
-        NPC closestNpc = getClosestNpc(script, NPC_IDS);
+        NPC closestNpc = getClosestNpc(script);
 
         if (closestNpc != null && closestNpc.interact("Pay-fare")) {
             waitForDialogue(script);
@@ -70,8 +70,8 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
         }
     }
 
-    private NPC getClosestNpc(Script script, int[] npcIds) {
-        return script.getNpcs().closest(npc -> npc != null && Arrays.stream(npcIds).anyMatch(id -> id == npc.getId()));
+    private NPC getClosestNpc(Script script) {
+        return script.getNpcs().closest(npc -> npc != null && Arrays.stream(LobsterPotFishingStrategy.NPC_IDS).anyMatch(id -> id == npc.getId()));
     }
 
     private void waitForDialogue(Script script) {
@@ -86,7 +86,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     private void completeDialogueAndCrossPlank(Script script) throws InterruptedException {
         if (script.getDialogues().isPendingContinuation()) {
             script.getDialogues().completeDialogue("Yes please.");
-            MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
+            MethodProvider.sleep(random());
             Entity plank = script.getObjects().closest(PLANK_ID);
             if (plank != null && plank.interact("Cross")) {
                 waitForArrivalInKaramja(script);
@@ -105,8 +105,8 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
         script.getWalking().webWalk(fishingArea);
     }
 
-    private int random(int min, int max) {
-        return (int) (min + Math.random() * (max - min + 1));
+    private int random() {
+        return (int) (LobsterPotFishingStrategy.SLEEP_MIN_MS + Math.random() * (LobsterPotFishingStrategy.SLEEP_MAX_MS - LobsterPotFishingStrategy.SLEEP_MIN_MS + 1));
     }
 
     private void handleFullInventory(Script script) throws InterruptedException {
@@ -134,7 +134,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
                 "Search away, I have nothing to hide.", "Ok."};
         if (script.getDialogues().isPendingContinuation()) {
             script.getDialogues().completeDialogue(dialogueOptions);
-            MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
+            MethodProvider.sleep(random());
         }
     }
 
