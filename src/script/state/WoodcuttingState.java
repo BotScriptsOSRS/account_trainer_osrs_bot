@@ -59,7 +59,7 @@ public class WoodcuttingState implements BotState {
 
     private boolean checkWoodcuttingEquipment(MainScript script) {
         int woodcuttingLevel = script.getSkills().getStatic(Skill.WOODCUTTING);
-        List<Integer> axesToBuy = getAxesToBuy();
+        List<Integer> axesToBuy = getAxesToBuy(script);
         int currentAxeId = getBestAxeId(woodcuttingLevel);
 
         if (!script.getInventory().contains(currentAxeId) && !script.getEquipment().contains(currentAxeId)) {
@@ -69,8 +69,31 @@ public class WoodcuttingState implements BotState {
         return true;
     }
 
-    private List<Integer> getAxesToBuy() {
-        return new ArrayList<>(Arrays.asList(GameItem.BRONZE_AXE.getId(), GameItem.STEEL_AXE.getId(), GameItem.BLACK_AXE.getId(), GameItem.MITHRIL_AXE.getId(), GameItem.ADAMANT_AXE.getId(), GameItem.RUNE_AXE.getId()));
+    private List<Integer> getAxesToBuy(MainScript script) {
+        int woodcuttingLevel = script.getSkills().getStatic(Skill.WOODCUTTING);
+        List<Integer> itemsToBuy = new ArrayList<>();
+        if (woodcuttingLevel <= 6) {
+            itemsToBuy.add(GameItem.STEEL_AXE.getId());
+            itemsToBuy.add(GameItem.BLACK_AXE.getId());
+            itemsToBuy.add(GameItem.MITHRIL_AXE.getId());
+            itemsToBuy.add(GameItem.ADAMANT_AXE.getId());
+            itemsToBuy.add(GameItem.RUNE_AXE.getId());
+        } else if (woodcuttingLevel <= 11) {
+            itemsToBuy.add(GameItem.BLACK_AXE.getId());
+            itemsToBuy.add(GameItem.MITHRIL_AXE.getId());
+            itemsToBuy.add(GameItem.ADAMANT_AXE.getId());
+            itemsToBuy.add(GameItem.RUNE_AXE.getId());
+        } else if (woodcuttingLevel <= 21){
+            itemsToBuy.add(GameItem.MITHRIL_AXE.getId());
+            itemsToBuy.add(GameItem.ADAMANT_AXE.getId());
+            itemsToBuy.add(GameItem.RUNE_AXE.getId());
+        } else if (woodcuttingLevel <= 31){
+            itemsToBuy.add(GameItem.ADAMANT_AXE.getId());
+            itemsToBuy.add(GameItem.RUNE_AXE.getId());
+        } else {
+            itemsToBuy.add(GameItem.RUNE_AXE.getId());
+        }
+        return itemsToBuy;
     }
 
     private void switchToBankingStateForWoodcuttingEquipment(MainScript script, int currentAxeId, List<Integer> futureAxeIds) {

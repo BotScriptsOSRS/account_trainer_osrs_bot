@@ -12,6 +12,7 @@ import script.state.BotState;
 import script.state.GrandExchangeState;
 import script.strategy.TaskStrategy;
 import script.strategy.grand_exchange.BuyGrandExchangeStrategy;
+import script.strategy.grand_exchange.SellGrandExchangeStrategy;
 import script.utils.GameItem;
 
 import java.util.Arrays;
@@ -28,6 +29,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     private static final int ITEM_INTERACT_WAIT_MS = 5000;
     private static final int SLEEP_MIN_MS = 1000;
     private static final int SLEEP_MAX_MS = 1500;
+    private final SellGrandExchangeStrategy sellStrategy;
 
     private final Map<String, Integer> itemsToBuyInAdvance;
     private final BotState returnState;
@@ -45,6 +47,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     };
 
     public SwitchStateBankingStrategy(Map<Integer, Integer> requiredBankItems, Map<Integer, Integer> itemsToBuyInAdvance, BotState returnState) {
+        sellStrategy = new SellGrandExchangeStrategy();
         this.requiredBankItems = convertIdMapToNameMap(requiredBankItems);
         this.itemsToBuyInAdvance = convertIdMapToNameMap(itemsToBuyInAdvance);
         this.returnState = returnState;
@@ -65,13 +68,11 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
             script.log("Failed to prepare for banking.");
             return;
         }
-
         if (!areAllItemsAvailable(script)) {
             script.log("Not all required items are available in the bank.");
             handleMissingItems(script);
             return;
         }
-
         performBankingActions(script);
     }
 
@@ -88,7 +89,6 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         }
         return openBankWithRetry(script);
     }
-
     private boolean isAtBank(Script script) {
         return Arrays.stream(BANKS).anyMatch(bank -> bank.contains(script.myPosition()));
     }
@@ -106,6 +106,10 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
         int totalAmount = getTotalItemAmount(script, itemName);
 
+        if ("Coins".equals(itemName) && totalAmount < requiredQuantity) {
+            sellStrategy.execute(script);
+            totalAmount = getTotalItemAmount(script, itemName);
+        }
         return totalAmount >= requiredQuantity || isItemAvailableInBank(script, itemName, requiredQuantity - totalAmount);
     }
 

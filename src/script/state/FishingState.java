@@ -74,12 +74,21 @@ public class FishingState implements BotState {
         return requiredItems;
     }
 
-    private List<Integer> getFishingItemsToBuy() {
+    private List<Integer> getFishingItemsToBuy(MainScript script) {
+        int fishingLevel = script.getSkills().getStatic(Skill.FISHING);
         List<Integer> itemsToBuy = new ArrayList<>();
-        itemsToBuy.add(GameItem.SMALL_FISHING_NET.getId());
-        itemsToBuy.add(GameItem.FEATHER.getId());
-        itemsToBuy.add(GameItem.FLY_FISHING_ROD.getId());
-        itemsToBuy.add(GameItem.LOBSTER_POT.getId());
+        if (fishingLevel < 20) {
+            itemsToBuy.add(GameItem.SMALL_FISHING_NET.getId());
+            itemsToBuy.add(GameItem.FEATHER.getId());
+            itemsToBuy.add(GameItem.FLY_FISHING_ROD.getId());
+            itemsToBuy.add(GameItem.LOBSTER_POT.getId());
+        } else if (fishingLevel < 40) {
+            itemsToBuy.add(GameItem.FEATHER.getId());
+            itemsToBuy.add(GameItem.FLY_FISHING_ROD.getId());
+            itemsToBuy.add(GameItem.LOBSTER_POT.getId());
+        } else {
+            itemsToBuy.add(GameItem.LOBSTER_POT.getId());
+        }
         return itemsToBuy;
     }
 
@@ -104,7 +113,7 @@ public class FishingState implements BotState {
         }
 
         // Prepare future fishing items with appropriate quantities
-        List<Integer> futureFishingItems = getFishingItemsToBuy();
+        List<Integer> futureFishingItems = getFishingItemsToBuy(script);
         for (Integer futureItemId : futureFishingItems) {
             int quantity = futureItemId == GameItem.FEATHER.getId() ? featherQuantity : 1; // Use the same feather quantity
 
