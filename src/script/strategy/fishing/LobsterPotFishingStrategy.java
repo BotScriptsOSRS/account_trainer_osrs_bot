@@ -144,9 +144,10 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
                     return portSarimArea.contains(script.myPlayer());
                 }
             }.sleep();
-            script.getWalking().webWalk(depositBoxArea);
-            depositItems(script);
         }
+        script.getWalking().webWalk(depositBoxArea);
+        depositItems(script);
+
     }
 
     private void waitForArrivalInPortSarim(Script script) {
