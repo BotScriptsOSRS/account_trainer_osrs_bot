@@ -7,30 +7,26 @@ import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+import script.utils.GameItem;
 
 import java.util.Arrays;
 
 public class LobsterPotFishingStrategy implements TaskStrategy {
 
-    private final int lobsterPotId;
-    private final int coinsId;
-    private static final int LOBSTER_POT_FISHING_SPOT_ID = 1522;
-    private static final int PLANK_ID = 2082;
-    private static final int NPC_ID_FOR_DEPOSIT = 3648;
-    private static final int PLANK_ID_FOR_DEPOSIT = 2084;
-    private static final int[] NPC_IDS = {3644, 3645, 3646};
-    private static final Area karamjaPortArea = new Area(2950, 3144, 2961, 3152);
+    private static final int lobsterPotFishingSpotId = 1522;
+    private static final int plankIdPortKaramja = 2082;
+    private static final int plankIdPortSarim = 2084;
+    private static final int npcIdPortKaramja = 3648;
+    private static final int[] npcIds = {3644, 3645, 3646};
     private static final Position boatPositionKaramja = new Position(2956,3143,1);
     private static final Position boatPositionPortSarim = new Position(3032,3217,1);
+    private static final Area karamjaPortArea = new Area(2950, 3144, 2961, 3152);
     private final Area fishingArea = new Area(2921, 3175, 2927, 3181);
-
     private final Area portSarimArea = new Area(3026, 3216, 3029, 3219);
     private final Area karamjaArea = new Area(2962, 3145, 2912, 3182);
     private final Area depositBoxArea = new Area(3043, 3234, 3046, 3237);
 
-    public LobsterPotFishingStrategy(int lobsterPotId, int coinsId) {
-        this.lobsterPotId = lobsterPotId;
-        this.coinsId = coinsId;
+    public LobsterPotFishingStrategy() {
     }
 
     @Override
@@ -71,7 +67,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     }
 
     private NPC getClosestNpc(Script script) {
-        return script.getNpcs().closest(npc -> npc != null && Arrays.stream(LobsterPotFishingStrategy.NPC_IDS).anyMatch(id -> id == npc.getId()));
+        return script.getNpcs().closest(npc -> npc != null && Arrays.stream(LobsterPotFishingStrategy.npcIds).anyMatch(id -> id == npc.getId()));
     }
 
     private void waitForDialogue(Script script) {
@@ -88,7 +84,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
             script.getDialogues().completeDialogue("Yes please.");
         }
         waitForArrivalInKaramja(script);
-        Entity plank = script.getObjects().closest(PLANK_ID);
+        Entity plank = script.getObjects().closest(plankIdPortKaramja);
         if (plank != null && plank.interact("Cross")) {
             new ConditionalSleep(5000, 500) {
                 @Override
@@ -121,7 +117,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
 
     private void interactWithNpcForDeposit(Script script) throws InterruptedException {
         if (!script.getDialogues().inDialogue()) {
-            NPC npcForDeposit = script.getNpcs().closest(NPC_ID_FOR_DEPOSIT);
+            NPC npcForDeposit = script.getNpcs().closest(npcIdPortKaramja);
             if (npcForDeposit != null && npcForDeposit.interact("Pay-fare")) {
                 waitForDialogue(script);
                 completeDialogueForDeposit(script);
@@ -140,7 +136,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
 
     private void crossPlankAndDepositItems(Script script) {
         waitForArrivalInPortSarim(script);
-        Entity plankForDeposit = script.getObjects().closest(PLANK_ID_FOR_DEPOSIT);
+        Entity plankForDeposit = script.getObjects().closest(plankIdPortSarim);
         if (plankForDeposit != null && plankForDeposit.interact("Cross")) {
             new ConditionalSleep(5000, 500) {
                 @Override
@@ -171,12 +167,12 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
         }.sleep();
 
         if (script.getDepositBox().isOpen()) {
-            script.getDepositBox().depositAllExcept(lobsterPotId, coinsId);
+            script.getDepositBox().depositAllExcept(GameItem.LOBSTER_POT.getId(), GameItem.COINS.getId());
 
             new ConditionalSleep(5000) {
                 @Override
                 public boolean condition() {
-                    return script.getInventory().contains(lobsterPotId) && script.getInventory().contains(coinsId) && script.getInventory().getEmptySlots() > 0;
+                    return script.getInventory().contains(GameItem.LOBSTER_POT.getId()) && script.getInventory().contains(GameItem.COINS.getId()) && script.getInventory().getEmptySlots() > 0;
                 }
             }.sleep();
 
@@ -196,7 +192,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     }
 
     private void startFishing(Script script) {
-        NPC fishingSpot = script.getNpcs().closest(LOBSTER_POT_FISHING_SPOT_ID);
+        NPC fishingSpot = script.getNpcs().closest(lobsterPotFishingSpotId);
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
             if (fishingSpot.interact("Cage")) {
                 waitForFishingAnimation(script);
