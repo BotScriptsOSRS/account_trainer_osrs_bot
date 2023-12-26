@@ -1,12 +1,6 @@
 package script.state;
 
-import org.osbot.rs07.api.map.Area;
-import org.osbot.rs07.api.map.Position;
-import org.osbot.rs07.api.model.Entity;
-import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.api.ui.Skill;
-import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.MainScript;
 import script.strategy.banking.SwitchStateBankingStrategy;
 import script.strategy.TaskStrategy;
@@ -20,12 +14,6 @@ import java.util.*;
 public class FishingState implements BotState {
     private TaskStrategy strategy;
     private long switchTime;
-    private static final int npcId = 3648;
-    private static final int plankId = 2084;
-    private static final Position boatPositionPortSarim = new Position(3032,3217,1);
-    private final Area portSarimArea = new Area(3026, 3216, 3029, 3219);
-    private final Area karamjaArea = new Area(2962, 3145, 2912, 3182);
-    private static final Area karamjaPortArea = new Area(2950, 3144, 2961, 3152);
 
     public FishingState(MainScript script) {
         updateStrategy(script);
@@ -133,13 +121,6 @@ public class FishingState implements BotState {
     @Override
     public BotState nextState(MainScript script) {
         if (shouldSwitchToAnotherState()) {
-            if (karamjaArea.contains(script.myPlayer())){
-                try {
-                    leaveKaramaja(script);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
             return script.pickRandomState(this);
         }
         return this;
@@ -148,65 +129,5 @@ public class FishingState implements BotState {
 
     private boolean shouldSwitchToAnotherState() {
         return System.currentTimeMillis() > switchTime;
-    }
-
-    private void leaveKaramaja(Script script) throws InterruptedException {
-        script.log("Inventory full, walking to deposit box");
-        if (!karamjaPortArea.contains(script.myPlayer())){
-            script.getWalking().webWalk(karamjaPortArea);
-        }
-        interactWithNpc(script);
-        crossPlank(script);
-    }
-
-    private void interactWithNpc(Script script) throws InterruptedException {
-        if (!script.getDialogues().inDialogue()) {
-            NPC npcForDeposit = script.getNpcs().closest(npcId);
-            if (npcForDeposit != null && npcForDeposit.interact("Pay-fare")) {
-                waitForDialogue(script);
-                completeDialogueForDeposit(script);
-            }
-        } else {
-            completeDialogueForDeposit(script);
-        }
-    }
-
-    private void waitForDialogue(Script script) {
-        new ConditionalSleep(5000, 500) {
-            @Override
-            public boolean condition() {
-                return script.getDialogues().inDialogue();
-            }
-        }.sleep();
-    }
-
-    private void completeDialogueForDeposit(Script script) throws InterruptedException {
-        String[] dialogueOptions = {"Can I journey on this ship?",
-                "Search away, I have nothing to hide.", "Ok."};
-        if (script.getDialogues().isPendingContinuation()) {
-            script.getDialogues().completeDialogue(dialogueOptions);
-        }
-    }
-
-    private void crossPlank(Script script) {
-        waitForArrivalInPortSarim(script);
-        Entity plankForDeposit = script.getObjects().closest(plankId);
-        if (plankForDeposit != null && plankForDeposit.interact("Cross")) {
-            new ConditionalSleep(5000, 500) {
-                @Override
-                public boolean condition() {
-                    return portSarimArea.contains(script.myPlayer());
-                }
-            }.sleep();
-        }
-    }
-
-    private void waitForArrivalInPortSarim(Script script) {
-        new ConditionalSleep(10000, 500) {
-            @Override
-            public boolean condition() {
-                return boatPositionPortSarim.equals(script.myPlayer().getPosition());
-            }
-        }.sleep();
     }
 }
