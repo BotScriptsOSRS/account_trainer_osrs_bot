@@ -15,13 +15,12 @@ public class GrandExchangeState implements BotState {
 
     @Override
     public void execute(MainScript script) throws InterruptedException {
-        script.log("Executing buying strategy");
         grandExchangeStrategy.execute(script);
     }
 
     @Override
     public BotState nextState(MainScript script) {
-        script.log("Returning to previous state after buying items");
+        script.log("Returning to previous state");
         return returnState;
     }
 }

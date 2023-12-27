@@ -29,8 +29,6 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     private static final int ITEM_INTERACT_WAIT_MS = 5000;
     private static final int SLEEP_MIN_MS = 1000;
     private static final int SLEEP_MAX_MS = 1500;
-    private final SellGrandExchangeStrategy sellStrategy;
-
     private final Map<String, Integer> itemsToBuyInAdvance;
     private final BotState returnState;
     private final Map<String, Integer> requiredBankItems;
@@ -47,7 +45,6 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     };
 
     public SwitchStateBankingStrategy(Map<Integer, Integer> requiredBankItems, Map<Integer, Integer> itemsToBuyInAdvance, BotState returnState) {
-        sellStrategy = new SellGrandExchangeStrategy();
         this.requiredBankItems = convertIdMapToNameMap(requiredBankItems);
         this.itemsToBuyInAdvance = convertIdMapToNameMap(itemsToBuyInAdvance);
         this.returnState = returnState;
@@ -107,8 +104,9 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         int totalAmount = getTotalItemAmount(script, itemName);
 
         if ("Coins".equals(itemName) && totalAmount < requiredQuantity) {
-            sellStrategy.execute(script);
-            totalAmount = getTotalItemAmount(script, itemName);
+            script.log("Not enough coins, transitioning to Grand Exchange State to sell items.");
+            TaskStrategy grandExchangeStrategy = new SellGrandExchangeStrategy();
+            ((MainScript) script).setCurrentState(new GrandExchangeState((MainScript) script, grandExchangeStrategy, returnState));
         }
         return totalAmount >= requiredQuantity || isItemAvailableInBank(script, itemName, requiredQuantity - totalAmount);
     }
@@ -157,32 +155,24 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     private void depositInventoryAndEquipment(Script script) {
         if (!script.getInventory().isEmpty()) {
             script.log("Depositing inventory");
-            script.getBank().depositAll();
-            waitForEmptyInventory(script);
+            new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
+                @Override
+                public boolean condition() {
+                    return script.getBank().depositAll();
+                }
+            }.sleep();
+
         }
         if (!script.getEquipment().isEmpty()) {
             script.log("Depositing equipment");
-            script.getBank().depositWornItems();
-            waitForEmptyEquipment(script);
+            new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
+                @Override
+                public boolean condition() {
+                    return script.getBank().depositWornItems();
+                }
+            }.sleep();
+
         }
-    }
-
-    private void waitForEmptyInventory(Script script) {
-        new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
-            @Override
-            public boolean condition() {
-                return script.getInventory().isEmpty();
-            }
-        }.sleep();
-    }
-
-    private void waitForEmptyEquipment(Script script) {
-        new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
-            @Override
-            public boolean condition() {
-                return script.getEquipment().isEmpty();
-            }
-        }.sleep();
     }
 
     private void withdrawRequiredItems(Script script) throws InterruptedException {
@@ -263,7 +253,6 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
 
     private void proceedToPurchaseItems(Script script, Map<String, Integer> itemsToPurchase) {
         depositInventoryAndEquipment(script);
-        closeBank(script);
         script.log("Transitioning to Grand Exchange State to buy missing items.");
         TaskStrategy grandExchangeStrategy = new BuyGrandExchangeStrategy(itemsToPurchase);
         ((MainScript) script).setCurrentState(new GrandExchangeState((MainScript) script, grandExchangeStrategy, returnState));
