@@ -8,17 +8,14 @@ import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.paint.OSDPainter;
-import script.state.BotState;
-import script.state.CraftingState;
-import script.state.FishingState;
-import script.state.WoodcuttingState;
+import script.state.*;
 
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 
-@ScriptManifest(name = "AccountTrainer", author = "Boyd", version = 1.0, info = "", logo = "")
+@ScriptManifest(name = "AccountTrainer", author = "BotScriptsOSRS", version = 1.0, info = "", logo = "")
 public class MainScript extends Script {
 
     private static final int npcId = 3648;

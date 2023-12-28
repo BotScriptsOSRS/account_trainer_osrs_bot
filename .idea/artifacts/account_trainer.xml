@@ -1,7 +1,7 @@
 <component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="scripts_jar">
+  <artifact type="jar" build-on-make="true" name="account_trainer">
     <output-path>$USER_HOME$/OSBot/Scripts</output-path>
-    <root id="archive" name="scripts_jar.jar">
+    <root id="archive" name="account_trainer.jar">
       <element id="module-output" name="scripts" />
     </root>
   </artifact>

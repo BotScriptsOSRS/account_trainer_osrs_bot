@@ -113,7 +113,7 @@ public class FishingState implements BotState {
         for (int itemId : currentRequiredItems) {
             int quantity = itemId == GameItem.FEATHER.getId() ? featherQuantity : 1;
             if (itemId == GameItem.COINS.getId()) {
-                quantity = random.nextInt(20001) + 30000;
+                quantity = random.nextInt(20001) + 20000;
             }
             requiredItems.put(itemId, quantity);
         }

@@ -12,9 +12,11 @@ import script.MainScript;
 import script.state.BotState;
 import script.state.CraftingState;
 import script.state.GrandExchangeState;
+import script.state.MulingState;
 import script.strategy.TaskStrategy;
 import script.strategy.grand_exchange.BuyGrandExchangeStrategy;
 import script.strategy.grand_exchange.SellGrandExchangeStrategy;
+import script.strategy.muling.MulingStrategy;
 import script.utils.GameItem;
 
 import java.util.*;
@@ -67,16 +69,52 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
 
     @Override
     public void execute(Script script) throws InterruptedException {
-        if (!prepareForBanking(script)) {
-            script.log("Failed to prepare for banking.");
+        MainScript mainScript = (MainScript) script;
+        if (!prepareForBanking(mainScript)) {
+            mainScript.log("Failed to prepare for banking.");
             return;
         }
-        if (!areAllItemsAvailable(script)) {
-            script.log("Not all required items are available in the bank.");
-            handleMissingItems(script);
+        if (checkAndHandleCoinConditions(mainScript)) {
             return;
         }
-        performBankingActions(script);
+        if (!areAllItemsAvailable(mainScript)) {
+            mainScript.log("Not all required items are available in the bank.");
+            handleMissingItems(mainScript);
+            return;
+        }
+        performBankingActions(mainScript);
+    }
+
+    private boolean checkAndHandleCoinConditions(MainScript script) {
+        if (tooManyCoins(script)) {
+            script.log("Too many coins, transition to muling state");
+            handleTooManyCoins(script);
+            return true;
+        }
+        if (tooLittleCoins(script)) {
+            script.log("Too little coins, transition to Grand Exchange state to sell items");
+            handleTooLittleCoins(script);
+            return true;
+        }
+        return false;
+    }
+
+    private void handleTooManyCoins(MainScript script) {
+        if (!Banks.FALADOR_WEST.contains(script.myPlayer())) {
+            depositInventoryAndEquipment(script);
+        }
+        TaskStrategy mulingStrategy = new MulingStrategy();
+        MulingState mulingState = new MulingState(script, mulingStrategy, returnState);
+        script.setCurrentState(mulingState);
+    }
+
+    private void handleTooLittleCoins(MainScript script) {
+        if (!Banks.GRAND_EXCHANGE.contains(script.myPlayer())) {
+            depositInventoryAndEquipment(script);
+        }
+        TaskStrategy sellGrandExchangeStrategy = new SellGrandExchangeStrategy();
+        GrandExchangeState grandExchangeState = new GrandExchangeState(script, sellGrandExchangeStrategy, returnState);
+        script.setCurrentState(grandExchangeState);
     }
 
     private void performBankingActions(Script script) throws InterruptedException {
@@ -109,15 +147,17 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         return true;
     }
 
+    private boolean tooManyCoins(Script script){
+        return getTotalItemAmount(script, GameItem.COINS.getName()) > 800000;
+    }
+
+    private boolean tooLittleCoins(Script script){
+        return getTotalItemAmount(script, GameItem.COINS.getName()) < 50000;
+    }
+
     private boolean isItemAvailable(Script script, String itemName, int requiredQuantity) throws InterruptedException {
         MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
         int totalAmount = getTotalItemAmount(script, itemName);
-
-        if ("Coins".equals(itemName) && totalAmount < requiredQuantity) {
-            script.log("Not enough coins, transitioning to Grand Exchange State to sell items.");
-            TaskStrategy grandExchangeStrategy = new SellGrandExchangeStrategy();
-            ((MainScript) script).setCurrentState(new GrandExchangeState((MainScript) script, grandExchangeStrategy, returnState));
-        }
         return totalAmount >= requiredQuantity || isItemAvailableInBank(script, itemName, requiredQuantity - totalAmount);
     }
 
