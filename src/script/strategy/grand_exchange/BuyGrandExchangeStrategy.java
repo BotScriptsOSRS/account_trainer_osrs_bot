@@ -91,10 +91,10 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
             return 3000;
         } else if (itemPrice <= 1000) {
             // For moderately priced items, add a smaller percentage
-            return (int) (itemPrice * 1.5);
+            return (int) (itemPrice * 1.3);
         } else {
             // For expensive items, use the existing 30% increase
-            return (int) (itemPrice * 1.25);
+            return (int) (itemPrice * 1.2);
         }
     }
 

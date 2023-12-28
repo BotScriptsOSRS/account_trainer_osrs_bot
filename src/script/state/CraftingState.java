@@ -39,7 +39,7 @@ public class CraftingState implements BotState {
 
         if (craftingLevel < 5) {
             this.strategy = new LeatherStrategy();
-        } else if (craftingLevel < 20) {
+        } else if (craftingLevel < 27) {
             this.strategy = new GoldRingStrategy();
         } else {
             this.strategy = new EmeraldRingStrategy();
@@ -53,7 +53,7 @@ public class CraftingState implements BotState {
             requiredItems.add(GameItem.NEEDLE.getId());
             requiredItems.add(GameItem.THREAD.getId());
             requiredItems.add(GameItem.SOFT_LEATHER.getId());
-        } else if (craftingLevel < 20) {
+        } else if (craftingLevel < 27) {
             requiredItems.add(GameItem.GOLD_BAR.getId());
             requiredItems.add(GameItem.RING_MOULD.getId());
         } else {
@@ -84,11 +84,11 @@ public class CraftingState implements BotState {
             itemsToBuy.add(GameItem.NEEDLE.getId());
             itemsToBuy.add(GameItem.THREAD.getId());
             itemsToBuy.add(GameItem.SOFT_LEATHER.getId());
-        } else if (craftingLevel < 20) {
+        } else if (craftingLevel < 27) {
             itemsToBuy.add(GameItem.GOLD_BAR.getId());
             itemsToBuy.add(GameItem.RING_MOULD.getId());
         }
-        if (craftingLevel >= 20){
+        if (craftingLevel >= 27){
             itemsToBuy.add(GameItem.GOLD_BAR.getId());
             itemsToBuy.add(GameItem.EMERALD.getId());
             itemsToBuy.add(GameItem.RING_MOULD.getId());
