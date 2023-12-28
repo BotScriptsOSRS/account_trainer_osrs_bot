@@ -5,9 +5,9 @@ import script.MainScript;
 import script.strategy.banking.DepositAllBankingStrategy;
 import script.strategy.banking.SwitchStateBankingStrategy;
 import script.strategy.TaskStrategy;
-import script.strategy.woodcutting.OakWoodcuttingStrategy;
-import script.strategy.woodcutting.TreeWoodcuttingStrategy;
-import script.strategy.woodcutting.YewWoodcuttingStrategy;
+import script.strategy.woodcutting.OakStrategy;
+import script.strategy.woodcutting.TreeStrategy;
+import script.strategy.woodcutting.YewStrategy;
 import script.utils.GameItem;
 
 import java.util.*;
@@ -40,11 +40,11 @@ public class WoodcuttingState implements BotState {
         int bestAxeId = getBestAxeId(woodcuttingLevel);
 
         if (woodcuttingLevel < 15) {
-            this.strategy = new TreeWoodcuttingStrategy(bestAxeId);
+            this.strategy = new TreeStrategy(bestAxeId);
         } else if (woodcuttingLevel < 60) {
-            this.strategy = new OakWoodcuttingStrategy(script, bestAxeId, this);
+            this.strategy = new OakStrategy(script, bestAxeId, this);
         } else {
-            this.strategy = new YewWoodcuttingStrategy(script, bestAxeId, this);
+            this.strategy = new YewStrategy(script, bestAxeId, this);
         }
     }
 
@@ -112,8 +112,8 @@ public class WoodcuttingState implements BotState {
         }
 
         // Switch to banking state with the strategy to handle the required items
-        BankingState returnBankingState = new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForWoodcutting, futureAxeIdsMap, this), this);
-        script.setCurrentState(new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForWoodcutting, futureAxeIdsMap, returnBankingState), this));
+        BankingState bankingState = new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForWoodcutting, futureAxeIdsMap, this), this);
+        script.setCurrentState(bankingState);
     }
 
     public void switchToBankingState(MainScript script) {

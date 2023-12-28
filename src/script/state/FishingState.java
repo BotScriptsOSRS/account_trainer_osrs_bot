@@ -4,9 +4,9 @@ import org.osbot.rs07.api.ui.Skill;
 import script.MainScript;
 import script.strategy.banking.SwitchStateBankingStrategy;
 import script.strategy.TaskStrategy;
-import script.strategy.fishing.FlyFishingStrategy;
-import script.strategy.fishing.LobsterPotFishingStrategy;
-import script.strategy.fishing.SmallNetFishingStrategy;
+import script.strategy.fishing.FlyStrategy;
+import script.strategy.fishing.LobsterPotStrategy;
+import script.strategy.fishing.SmallNetStrategy;
 import script.utils.GameItem;
 
 import java.util.*;
@@ -37,11 +37,11 @@ public class FishingState implements BotState {
     private void updateStrategy(MainScript script) {
         int fishingLevel = script.getSkills().getStatic(Skill.FISHING);
         if (fishingLevel < 20) {
-            this.strategy = new SmallNetFishingStrategy();
+            this.strategy = new SmallNetStrategy();
         } else if (fishingLevel < 40) {
-            this.strategy = new FlyFishingStrategy();
+            this.strategy = new FlyStrategy();
         } else {
-            this.strategy = new LobsterPotFishingStrategy();
+            this.strategy = new LobsterPotStrategy();
         }
     }
 
@@ -94,37 +94,59 @@ public class FishingState implements BotState {
 
     private void switchToBankingStateForFishingEquipment(MainScript script, List<Integer> currentRequiredItems) {
         script.log("Switching to banking state for fishing equipment");
+        int fishingLevel = script.getSkills().getStatic(Skill.FISHING);
+        int experienceRequired = getExperienceDifference(fishingLevel, 40);
 
-        // Set a random quantity for feathers, used for both current and future needs
-        int featherQuantity = new Random().nextInt(201) + 800; // Random quantity between 800 and 1000
+        Random random = new Random();
+        int addRandomQuantity = random.nextInt(51) + 10;
+        int featherQuantity = experienceRequired / 50 + addRandomQuantity;
 
-        Map<Integer, Integer> requiredItemsForFishing = new HashMap<>();
-        Map<Integer, Integer> futureFishingItemsMap = new HashMap<>();
+        Map<Integer, Integer> requiredItemsForFishing = populateRequiredItems(currentRequiredItems, featherQuantity, random);
+        Map<Integer, Integer> futureFishingItemsMap = prepareFutureFishingItems(script, featherQuantity);
 
-        // Add currently required items for fishing
+        BankingState bankingState = new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForFishing, futureFishingItemsMap, this), this);
+        script.setCurrentState(bankingState);
+    }
+
+    private Map<Integer, Integer> populateRequiredItems(List<Integer> currentRequiredItems, int featherQuantity, Random random) {
+        Map<Integer, Integer> requiredItems = new HashMap<>();
         for (int itemId : currentRequiredItems) {
-            int quantity = itemId == GameItem.FEATHER.getId() ? featherQuantity : 1; // Default quantity for most items
-
+            int quantity = itemId == GameItem.FEATHER.getId() ? featherQuantity : 1;
             if (itemId == GameItem.COINS.getId()) {
-                quantity = new Random().nextInt(20001) + 30000; // Random quantity between 30,000 and 50,000 for coins
+                quantity = random.nextInt(20001) + 30000;
             }
-
-            requiredItemsForFishing.put(itemId, quantity);
+            requiredItems.put(itemId, quantity);
         }
+        return requiredItems;
+    }
 
-        // Prepare future fishing items with appropriate quantities
+    private Map<Integer, Integer> prepareFutureFishingItems(MainScript script, int featherQuantity) {
         List<Integer> futureFishingItems = getFishingItemsToBuy(script);
+        Map<Integer, Integer> futureItemsMap = new HashMap<>();
         for (Integer futureItemId : futureFishingItems) {
-            int quantity = futureItemId == GameItem.FEATHER.getId() ? featherQuantity : 1; // Use the same feather quantity
-
             if (!script.getBank().contains(futureItemId) && futureItemId != GameItem.COINS.getId()) {
-                futureFishingItemsMap.put(futureItemId, quantity);
+                futureItemsMap.put(futureItemId, futureItemId == GameItem.FEATHER.getId() ? featherQuantity : 1);
             }
         }
+        return futureItemsMap;
+    }
 
-        // Switch to banking state with the strategy to handle the required items
-        BankingState returnBankingState = new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForFishing, futureFishingItemsMap, this), this);
-        script.setCurrentState(new BankingState(script, new SwitchStateBankingStrategy(requiredItemsForFishing, futureFishingItemsMap, returnBankingState), this));
+    public static int getExperienceDifference(int currentLevel, int targetLevel) {
+        return getExperienceForLevel(targetLevel) - getExperienceForLevel(currentLevel);
+    }
+
+    public static int getExperienceForLevel(int level) {
+        int points = 0;
+        int output = 0;
+
+        for (int lvl = 1; lvl <= level; lvl++) {
+            points += (int) Math.floor(lvl + 300 * Math.pow(2, lvl / 7.0));
+            if (lvl >= level) {
+                return output;
+            }
+            output = (int) Math.floor((double) points / 4);
+        }
+        return 0;
     }
 
     @Override

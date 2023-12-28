@@ -8,7 +8,10 @@ public enum SellableItems {
     RAW_ANCHOVIES(321, "Raw anchovies"),
     RAW_TROUT(335, "Raw trout"),
     RAW_SALMON(331, "Raw salmon"),
-    RAW_LOBSTER(377, "Raw lobster");
+    RAW_LOBSTER(377, "Raw lobster"),
+    LEATHER_GLOVES(1059, "Leather gloves"),
+    GOLD_RINGS(1635, "Gold rings"),
+    EMERALD_RINGS(1639, "Emerald rings");
 
     private final int id;
     private final String name;

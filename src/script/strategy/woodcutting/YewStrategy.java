@@ -8,14 +8,15 @@ import script.MainScript;
 import script.state.WoodcuttingState;
 import script.strategy.TaskStrategy;
 
-public class OakWoodcuttingStrategy implements TaskStrategy {
+public class YewStrategy implements TaskStrategy {
 
     private final int bestAxeId;
-    private final MainScript mainScript; // Add reference to MainScript
-    private final Area woodcuttingArea = new Area(3103, 3241, 3098, 3245);
+    private final MainScript mainScript;
+    private final Area woodcuttingArea = new Area(3085, 3482, 3089, 3468);
+
     private final WoodcuttingState woodcuttingState;
 
-    public OakWoodcuttingStrategy(MainScript mainScript, int bestAxeId, WoodcuttingState woodcuttingState) {
+    public YewStrategy(MainScript mainScript, int bestAxeId, WoodcuttingState woodcuttingState) {
         this.mainScript = mainScript;
         this.bestAxeId = bestAxeId;
         this.woodcuttingState = woodcuttingState;
@@ -54,7 +55,7 @@ public class OakWoodcuttingStrategy implements TaskStrategy {
             return;
         }
 
-        Entity tree = script.getObjects().closest(woodcuttingArea, "Oak tree");
+        Entity tree = script.getObjects().closest(woodcuttingArea, "Yew tree");
         if (tree != null && tree.interact("Chop down")) {
             waitForWoodcuttingToStart(script);
         }

@@ -6,12 +6,12 @@ import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
 
-public class SmallNetFishingStrategy implements TaskStrategy {
+public class SmallNetStrategy implements TaskStrategy {
 
     private static final int NET_FISHING_SPOT_ID = 1530;
     private final Area fishingArea = new Area(3237, 3139, 3249, 3162);
 
-    public SmallNetFishingStrategy() {
+    public SmallNetStrategy() {
     }
 
     @Override

@@ -1,5 +1,6 @@
 package script.strategy.banking;
 
+import org.osbot.rs07.api.Bank;
 import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Item;
@@ -9,15 +10,14 @@ import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.MainScript;
 import script.state.BotState;
+import script.state.CraftingState;
 import script.state.GrandExchangeState;
 import script.strategy.TaskStrategy;
 import script.strategy.grand_exchange.BuyGrandExchangeStrategy;
 import script.strategy.grand_exchange.SellGrandExchangeStrategy;
 import script.utils.GameItem;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.osbot.rs07.script.MethodProvider.random;
@@ -29,9 +29,10 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     private static final int ITEM_INTERACT_WAIT_MS = 5000;
     private static final int SLEEP_MIN_MS = 1000;
     private static final int SLEEP_MAX_MS = 1500;
-    private final Map<String, Integer> itemsToBuyInAdvance;
     private final BotState returnState;
+    private final Map<String, Integer> itemsToBuyInAdvance;
     private final Map<String, Integer> requiredBankItems;
+    private final List<String> depositExceptions;
     private static final Area[] BANKS = {
             Banks.LUMBRIDGE_UPPER,
             Banks.VARROCK_WEST,
@@ -44,10 +45,15 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
             Banks.DRAYNOR
     };
 
-    public SwitchStateBankingStrategy(Map<Integer, Integer> requiredBankItems, Map<Integer, Integer> itemsToBuyInAdvance, BotState returnState) {
+    public SwitchStateBankingStrategy(Map<Integer, Integer> requiredBankItems, Map<Integer, Integer> itemsToBuyInAdvance, BotState returnState, List<String> depositExceptions) {
         this.requiredBankItems = convertIdMapToNameMap(requiredBankItems);
         this.itemsToBuyInAdvance = convertIdMapToNameMap(itemsToBuyInAdvance);
         this.returnState = returnState;
+        this.depositExceptions = depositExceptions;
+    }
+
+    public SwitchStateBankingStrategy(Map<Integer, Integer> requiredBankItems, Map<Integer, Integer> itemsToBuyInAdvance, BotState returnState) {
+        this(requiredBankItems, itemsToBuyInAdvance, returnState, Collections.singletonList("null"));
     }
 
     private Map<String, Integer> convertIdMapToNameMap(Map<Integer, Integer> idMap) {
@@ -75,6 +81,10 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
 
     private void performBankingActions(Script script) throws InterruptedException {
         depositInventoryAndEquipment(script);
+        if (returnState instanceof CraftingState && !Banks.EDGEVILLE.contains(script.myPlayer())){
+            script.log("Walking to Edgeville bank to get crafting supplies"); // needed to not run from GE with gold bars etc
+            script.getWalking().webWalk(Banks.EDGEVILLE);
+        }
         withdrawRequiredItems(script);
         equipItemsIfNeeded(script);
         closeBank(script);
@@ -112,9 +122,10 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private int getTotalItemAmount(Script script, String itemName) {
+        int amountBank = (int) script.getBank().getAmount(itemName);
         int amountInInventory = (int) script.getInventory().getAmount(itemName);
         int amountEquipped = (int) script.getEquipment().getAmount(itemName);
-        return amountInInventory + amountEquipped;
+        return amountBank + amountInInventory + amountEquipped;
     }
 
     private boolean isItemAvailableInBank(Script script, String itemName, int requiredAmount) {
@@ -158,10 +169,9 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
             new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
                 @Override
                 public boolean condition() {
-                    return script.getBank().depositAll();
+                    return script.getBank().depositAllExcept(depositExceptions.toArray(new String[0]));
                 }
             }.sleep();
-
         }
         if (!script.getEquipment().isEmpty()) {
             script.log("Depositing equipment");
@@ -178,6 +188,14 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     private void withdrawRequiredItems(Script script) throws InterruptedException {
         if (!script.getBank().isOpen() && !openBankWithRetry(script)) {
             return;
+        }
+        if (script.getBank().isBankModeEnabled(Bank.BankMode.WITHDRAW_NOTE)){
+            new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
+                @Override
+                public boolean condition() {
+                    return script.getBank().enableMode(Bank.BankMode.WITHDRAW_ITEM);
+                }
+            }.sleep();
         }
         for (Map.Entry<String, Integer> entry : requiredBankItems.entrySet()) {
             withdrawSingleItem(script, entry.getKey(), entry.getValue());

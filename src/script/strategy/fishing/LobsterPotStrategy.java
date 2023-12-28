@@ -11,7 +11,7 @@ import script.utils.GameItem;
 
 import java.util.Arrays;
 
-public class LobsterPotFishingStrategy implements TaskStrategy {
+public class LobsterPotStrategy implements TaskStrategy {
 
     private static final int lobsterPotFishingSpotId = 1522;
     private static final int plankIdPortKaramja = 2082;
@@ -26,7 +26,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     private final Area karamjaArea = new Area(2962, 3145, 2912, 3182);
     private final Area depositBoxArea = new Area(3043, 3234, 3046, 3237);
 
-    public LobsterPotFishingStrategy() {
+    public LobsterPotStrategy() {
     }
 
     @Override
@@ -67,7 +67,7 @@ public class LobsterPotFishingStrategy implements TaskStrategy {
     }
 
     private NPC getClosestNpc(Script script) {
-        return script.getNpcs().closest(npc -> npc != null && Arrays.stream(LobsterPotFishingStrategy.npcIds).anyMatch(id -> id == npc.getId()));
+        return script.getNpcs().closest(npc -> npc != null && Arrays.stream(LobsterPotStrategy.npcIds).anyMatch(id -> id == npc.getId()));
     }
 
     private void waitForDialogue(Script script) {

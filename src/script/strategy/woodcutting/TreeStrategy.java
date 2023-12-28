@@ -7,13 +7,13 @@ import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
 
-public class TreeWoodcuttingStrategy implements TaskStrategy {
+public class TreeStrategy implements TaskStrategy {
 
     private final int bestAxeId;
     private final Area woodcuttingArea = new Area(3154, 3206, 3206, 3262);
     private final Position safePosition = new Position(3194, 3241, 0);
 
-    public TreeWoodcuttingStrategy(int bestAxeId) {
+    public TreeStrategy(int bestAxeId) {
         this.bestAxeId = bestAxeId;
     }
     @Override

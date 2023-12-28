@@ -11,7 +11,13 @@ public enum GameItem {
     BLACK_AXE(1361, "Black axe"),
     MITHRIL_AXE(1355, "Mithril axe"),
     ADAMANT_AXE(1357, "Adamant axe"),
-    RUNE_AXE(1359, "Rune axe");
+    RUNE_AXE(1359, "Rune axe"),
+    SOFT_LEATHER(1741, "Leather"),
+    NEEDLE(1733, "Needle"),
+    THREAD(1734, "Thread"),
+    RING_MOULD(1592, "Ring mould"),
+    GOLD_BAR(2357, "Gold bar"),
+    EMERALD(1605, "Emerald");
 
     private final int id;
     private final String name;

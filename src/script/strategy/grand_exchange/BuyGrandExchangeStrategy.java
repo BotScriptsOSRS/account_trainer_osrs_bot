@@ -14,7 +14,6 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
 
     private final Map<String, Integer> requiredItems;
     private final int SLEEP_DURATION_MS = 5000;
-    private final int MINIMUM_COINS = 50000;
     private final Area grandExchangeArea = new Area(3160, 3486, 3168, 3493);
     private final SellGrandExchangeStrategy sellStrategy;
 
@@ -63,7 +62,7 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
             int itemPrice = script.getGrandExchange().getOverallPrice(itemId);
 
             // Adjusted pricing strategy
-            int adjustedPrice = adjustPriceBasedOnTier(itemPrice);
+            int adjustedPrice = adjustPriceBasedOnTier(itemPrice, entry.getValue());
 
             final int finalPrice = adjustedPrice;
             script.log("Buying item: " + entry.getKey() + " for price: " + adjustedPrice);
@@ -83,13 +82,16 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
         }
     }
 
-    private int adjustPriceBasedOnTier(int itemPrice) {
+    private int adjustPriceBasedOnTier(int itemPrice, int itemQuantity) {
         if (itemPrice <= 10) {
             // For very cheap items, add a fixed amount
-            return itemPrice + 3;
+            return itemPrice + 5;
+        } else if (itemPrice <= 1000 && itemQuantity < 10) {
+            // For moderately priced items, add a smaller percentage
+            return 3000;
         } else if (itemPrice <= 1000) {
             // For moderately priced items, add a smaller percentage
-            return (itemPrice * 5);
+            return (int) (itemPrice * 1.5);
         } else {
             // For expensive items, use the existing 30% increase
             return (int) (itemPrice * 1.25);
@@ -164,6 +166,7 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
     }
 
     private boolean withdrawCoins(Script script) {
+        int MINIMUM_COINS = 50000;
         if (script.getBank().contains(GameItem.COINS.getId()) && script.getBank().getAmount(GameItem.COINS.getId()) > MINIMUM_COINS){
             script.getBank().withdrawAll(GameItem.COINS.getId());
             waitForItemInInventory(script, GameItem.COINS.getName());

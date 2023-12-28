@@ -9,6 +9,7 @@ import org.osbot.rs07.script.ScriptManifest;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.paint.OSDPainter;
 import script.state.BotState;
+import script.state.CraftingState;
 import script.state.FishingState;
 import script.state.WoodcuttingState;
 
@@ -39,6 +40,7 @@ public class MainScript extends Script {
         // Register states
         registerState(FishingState.class);
         registerState(WoodcuttingState.class);
+        registerState(CraftingState.class);
         // Add other states here
 
         currentState = pickRandomState(null);
