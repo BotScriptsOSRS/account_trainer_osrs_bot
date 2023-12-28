@@ -159,7 +159,7 @@ public class MulingStrategy implements TaskStrategy {
         script.log("Withdrawing all coins");
         if (script.getBank().contains(GameItem.COINS.getId())){
             long amountOfCoinsInBank = script.getBank().getAmount(GameItem.COINS.getId());
-            long amountToWithdraw = amountOfCoinsInBank - 450000;
+            long amountToWithdraw = amountOfCoinsInBank - 500000;
             script.getBank().withdraw(GameItem.COINS.getId(), (int) amountToWithdraw);
             waitForItemInInventory(script, GameItem.COINS.getName());
             return true;

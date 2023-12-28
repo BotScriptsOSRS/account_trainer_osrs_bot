@@ -152,7 +152,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private boolean tooLittleCoins(Script script){
-        return getTotalItemAmount(script, GameItem.COINS.getName()) < 230000;
+        return getTotalItemAmount(script, GameItem.COINS.getName()) < 250000;
     }
 
     private boolean isItemAvailable(Script script, String itemName, int requiredQuantity) throws InterruptedException {
