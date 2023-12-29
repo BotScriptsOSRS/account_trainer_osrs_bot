@@ -28,15 +28,6 @@ public enum SellableItems {
         return name;
     }
 
-    public static String getNameById(int itemId) {
-        for (SellableItems item : values()) {
-            if (item.getId() == itemId) {
-                return item.getName();
-            }
-        }
-        return null; // Or consider throwing an exception
-    }
-
     public static int getIdByName(String itemName) {
         for (SellableItems item : values()) {
             if (item.getName().equalsIgnoreCase(itemName)) {
@@ -44,6 +35,15 @@ public enum SellableItems {
             }
         }
         return -1; // Or consider throwing an exception
+    }
+
+    public static boolean isSellable(String itemName) {
+        for (SellableItems item : SellableItems.values()) {
+            if (item.getName().equalsIgnoreCase(itemName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

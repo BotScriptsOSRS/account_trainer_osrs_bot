@@ -51,25 +51,27 @@ public class SellGrandExchangeStrategy implements TaskStrategy {
     private void sellAndCollectItems(Script script) {
         // Iterating through each item in the inventory
         for (Item item : script.getInventory().getItems()) {
-            if (item != null && item.getDefinition().isNoted()) {  // Check if the item is noted
-                int itemId = SellableItems.getIdByName(item.getName());
-                final int finalPrice = determineSellPrice(script, itemId);
-                script.log("Selling item: " + item.getName() + " for price: " + finalPrice);
-                // Initiate the selling process
-                new ConditionalSleep(SLEEP_DURATION_MS, 500) {
-                    @Override
-                    public boolean condition() {
-                        return script.getGrandExchange().sellItem(item.getId(), finalPrice, item.getAmount());
-                    }
-                }.sleep();
+            if (item != null && item.getDefinition().isNoted()) {
+                if (SellableItems.isSellable(item.getName())) {
+                    int itemId = SellableItems.getIdByName(item.getName());
+                    final int finalPrice = determineSellPrice(script, itemId);
+                    script.log("Selling item: " + item.getName() + " for price: " + finalPrice);
+                    // Initiate the selling process
+                    new ConditionalSleep(SLEEP_DURATION_MS, 500) {
+                        @Override
+                        public boolean condition() {
+                            return script.getGrandExchange().sellItem(item.getId(), finalPrice, item.getAmount());
+                        }
+                    }.sleep();
 
-                // Collect coins or any unsold items
-                new ConditionalSleep(SLEEP_DURATION_MS, 500) {
-                    @Override
-                    public boolean condition() {
-                        return script.getGrandExchange().collect();
-                    }
-                }.sleep();
+                    // Collect coins or any unsold items
+                    new ConditionalSleep(SLEEP_DURATION_MS, 500) {
+                        @Override
+                        public boolean condition() {
+                            return script.getGrandExchange().collect();
+                        }
+                    }.sleep();
+                }
             }
         }
     }
@@ -128,11 +130,11 @@ public class SellGrandExchangeStrategy implements TaskStrategy {
         }.sleep();
     }
 
-    private boolean openBankWithRetry(Script script) throws InterruptedException {
+    private void openBankWithRetry(Script script) throws InterruptedException {
         int MAX_ATTEMPTS = 3;
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             if (openBank(script)) {
-                return true;
+                return;
             }
             script.log("Attempt to open bank failed, retrying...");
             new ConditionalSleep(SLEEP_DURATION_MS) {
@@ -143,7 +145,6 @@ public class SellGrandExchangeStrategy implements TaskStrategy {
             }.sleep();
         }
         script.log("Failed to open bank after multiple attempts");
-        return false;
     }
 
     private boolean openBank(Script script) throws InterruptedException {
