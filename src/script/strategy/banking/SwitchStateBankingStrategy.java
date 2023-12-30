@@ -144,6 +144,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private boolean areAllItemsAvailable(Script script) throws InterruptedException {
+        MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
         for (Map.Entry<String, Integer> entry : requiredBankItems.entrySet()) {
             if (!isItemAvailable(script, entry.getKey(), entry.getValue())) {
                 return false;
@@ -160,8 +161,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         return getTotalItemAmount(script, GameItem.COINS.getName()) < 250000;
     }
 
-    private boolean isItemAvailable(Script script, String itemName, int requiredQuantity) throws InterruptedException {
-        MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
+    private boolean isItemAvailable(Script script, String itemName, int requiredQuantity) {
         int totalAmount = getTotalItemAmount(script, itemName);
         return totalAmount >= requiredQuantity || isItemAvailableInBank(script, itemName, requiredQuantity - totalAmount);
     }
