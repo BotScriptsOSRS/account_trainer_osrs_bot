@@ -18,6 +18,7 @@ import script.strategy.grand_exchange.BuyGrandExchangeStrategy;
 import script.strategy.grand_exchange.SellGrandExchangeStrategy;
 import script.strategy.muling.MulingStrategy;
 import script.utils.GameItem;
+import script.utils.SellableItems;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -91,19 +92,32 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         LocalTime startTime = LocalTime.of(21, 0);
         LocalTime endTime = LocalTime.of(21, 30);
         if (tooManyCoins(script) && currentTime.isAfter(startTime) && currentTime.isBefore(endTime)) {
+            if (bankContainsSellableItems(script)) {
+                script.log("Sellable items found in the bank, selling items on Grand Exchange before muling.");
+                sellItemsOnGrandExchange(script);
+                return true;
+            }
             script.log("Too many coins, transition to muling state");
-            handleTooManyCoins(script);
+            muleCoins(script);
             return true;
         }
         if (tooLittleCoins(script)) {
             script.log("Too little coins, transition to Grand Exchange state to sell items");
-            handleTooLittleCoins(script);
+            sellItemsOnGrandExchange(script);
             return true;
         }
         return false;
     }
 
-    private void handleTooManyCoins(MainScript script) {
+    private boolean bankContainsSellableItems(MainScript script) {
+        int[] sellableItemIds = new int[SellableItems.values().length];
+        for (int i = 0; i < sellableItemIds.length; i++) {
+            sellableItemIds[i] = SellableItems.values()[i].getId();
+        }
+        return script.getBank().contains(sellableItemIds);
+    }
+
+    private void muleCoins(MainScript script) {
         if (!Banks.GRAND_EXCHANGE.contains(script.myPlayer())) {
             depositInventoryAndEquipment(script);
         }
@@ -112,7 +126,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         script.setCurrentState(mulingState);
     }
 
-    private void handleTooLittleCoins(MainScript script) {
+    private void sellItemsOnGrandExchange(MainScript script) {
         if (!Banks.GRAND_EXCHANGE.contains(script.myPlayer())) {
             depositInventoryAndEquipment(script);
         }
@@ -154,7 +168,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private boolean tooManyCoins(Script script){
-        return getTotalItemAmount(script, GameItem.COINS.getName()) > 1000000;
+        return getTotalItemAmount(script, GameItem.COINS.getName()) > 10000000;
     }
 
     private boolean tooLittleCoins(Script script){
