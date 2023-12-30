@@ -104,7 +104,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private void handleTooManyCoins(MainScript script) {
-        if (!Banks.FALADOR_WEST.contains(script.myPlayer())) {
+        if (!Banks.GRAND_EXCHANGE.contains(script.myPlayer())) {
             depositInventoryAndEquipment(script);
         }
         TaskStrategy mulingStrategy = new MulingStrategy();
@@ -154,7 +154,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private boolean tooManyCoins(Script script){
-        return getTotalItemAmount(script, GameItem.COINS.getName()) > 10000000;
+        return getTotalItemAmount(script, GameItem.COINS.getName()) > 1000000;
     }
 
     private boolean tooLittleCoins(Script script){

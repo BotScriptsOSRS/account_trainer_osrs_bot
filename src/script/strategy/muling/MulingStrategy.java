@@ -2,6 +2,7 @@ package script.strategy.muling;
 
 import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
+import org.osbot.rs07.script.MethodProvider;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
@@ -11,7 +12,7 @@ import java.util.concurrent.Callable;
 
 public class MulingStrategy implements TaskStrategy {
 
-    private final int SLEEP_DURATION_MS = 5000;
+    private final int SLEEP_DURATION_MS = 20000;
     private static final Area mulingArea = Banks.GRAND_EXCHANGE;
     private static final Area mulingWalkTo = new Area(3162, 3487, 3167, 3487);
 
@@ -25,31 +26,42 @@ public class MulingStrategy implements TaskStrategy {
     }
 
     private void hopToRandomWorld(Script script) {
-        if (!script.getInventory().contains(GameItem.COINS.getId()) && script.getWorlds().getCurrentWorld()==456){
+        if (!script.getInventory().contains(GameItem.COINS.getId())
+                && script.getWorlds().getCurrentWorld()==456
+                && !script.getTrade().isFirstInterfaceOpen()
+                && !script.getTrade().isSecondInterfaceOpen()){
+            script.log("Hop to random world");
             waitForCondition(() -> script.getWorlds().hopToF2PWorld());
         }
     }
 
     private void handleCoinsInInventory(Script script) throws InterruptedException {
         if (!script.getInventory().contains(GameItem.COINS.getId())) {
+            script.log("Withdrawing coins from bank");
             walkToMulingArea(script);
             checkBankForCoins(script);
+        }
+        if (script.getBank().isOpen()){
+            closeBank(script);
         }
     }
 
     private void hopToWorld(Script script) {
         if (script.getWorlds().getCurrentWorld() != 456) {
+            script.log("Hop to world 456");
             waitForCondition(() -> script.getWorlds().hop(456));
+            waitForCondition(() -> script.getWorlds().getCurrentWorld() == 456);
         }
     }
 
     private void walkToMulingArea(Script script) {
         if (!mulingArea.contains(script.myPlayer())) {
+            script.log("Walk to muling area");
             script.getWalking().webWalk(mulingWalkTo);
         }
     }
 
-    private void handleTrading(Script script) {
+    private void handleTrading(Script script) throws InterruptedException {
         if (shouldInitiateTrade(script)) {
             initiateTrade(script);
         }
@@ -57,20 +69,24 @@ public class MulingStrategy implements TaskStrategy {
             offerCoins(script);
         }
         if (shouldAcceptFirstTradeInterface(script)) {
-            acceptTrade(script);
+            MethodProvider.sleep(4000);
+            script.log("Accept trade (first interface)");
+            acceptTradeOne(script);
         }
         if (script.getTrade().isSecondInterfaceOpen()) {
-            acceptTrade(script);
+            script.log("Accept trade (second interface)");
+            acceptTradeTwo(script);
         }
     }
 
     private boolean shouldInitiateTrade(Script script) {
-        return script.getPlayers().closest("Faegrotto13") != null && !script.getTrade().isCurrentlyTrading();
+        return script.getPlayers().closest("Wornhope2131") != null && !script.getTrade().isCurrentlyTrading();
     }
 
     private void initiateTrade(Script script) {
-        waitForCondition(() -> script.getPlayers().closest("Faegrotto13").interact("Trade with"));
-        waitForCondition(() -> script.getTrade().didOtherAcceptTrade());
+        script.log("Initiating trade");
+        waitForCondition(() -> script.getPlayers().closest("Wornhope2131").interact("Trade with"));
+        waitForCondition(() -> script.getTrade().isFirstInterfaceOpen());
     }
 
     private boolean shouldOfferCoins(Script script) {
@@ -78,15 +94,22 @@ public class MulingStrategy implements TaskStrategy {
     }
 
     private void offerCoins(Script script) {
+        script.log("Offer coins");
         waitForCondition(() -> script.getTrade().offerAll(GameItem.COINS.getId()));
+        waitForCondition(() -> script.getTrade().getOurOffers().contains(GameItem.COINS.getId()));
     }
 
     private boolean shouldAcceptFirstTradeInterface(Script script) {
         return script.getTrade().isFirstInterfaceOpen() && script.getTrade().getOurOffers().contains(GameItem.COINS.getId());
     }
 
-    private void acceptTrade(Script script) {
-        waitForCondition(() -> script.getTrade().acceptTrade());
+    private void acceptTradeOne(Script script) {
+        script.getTrade().acceptTrade();
+        waitForCondition(() -> script.getTrade().isSecondInterfaceOpen());
+    }
+    private void acceptTradeTwo(Script script) {
+        script.getTrade().acceptTrade();
+        waitForCondition(() -> !script.getTrade().isSecondInterfaceOpen());
     }
 
     private void waitForCondition(Callable<Boolean> condition) {
@@ -105,6 +128,9 @@ public class MulingStrategy implements TaskStrategy {
     private void checkBankForCoins(Script script) throws InterruptedException {
         openBankWithRetry(script);
         if (withdrawCoins(script)){
+            closeBank(script);
+        }
+        if (script.getBank().isOpen()){
             closeBank(script);
         }
     }
@@ -147,10 +173,10 @@ public class MulingStrategy implements TaskStrategy {
     }
 
     private boolean withdrawCoins(Script script) {
-        script.log("Withdrawing all coins");
+        script.log("Withdrawing coins");
         if (script.getBank().contains(GameItem.COINS.getId())){
             long amountOfCoinsInBank = script.getBank().getAmount(GameItem.COINS.getId());
-            long amountToWithdraw = amountOfCoinsInBank - 500000;
+            long amountToWithdraw = amountOfCoinsInBank - 100000;
             script.getBank().withdraw(GameItem.COINS.getId(), (int) amountToWithdraw);
             waitForItemInInventory(script, GameItem.COINS.getName());
             return true;
