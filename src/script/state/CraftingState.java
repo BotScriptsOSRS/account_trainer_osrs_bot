@@ -106,7 +106,13 @@ public class CraftingState implements BotState {
 
         Map<Integer, Integer> futureCraftingItemsMap = prepareFutureCraftingItems(script, goldBarsAndEmeraldQuantity);
 
-        List<String> depositExceptionNames = Arrays.asList(GameItem.THREAD.getName(), GameItem.NEEDLE.getName(), GameItem.RING_MOULD.getName());
+        List<String> depositExceptionNames;
+
+        if (craftingLevel < 5) {
+            depositExceptionNames = Arrays.asList(GameItem.THREAD.getName(), GameItem.NEEDLE.getName());
+        } else {
+            depositExceptionNames = Collections.singletonList(GameItem.RING_MOULD.getName());
+        }
 
         BankingState bankingState = new BankingState(
                 script,

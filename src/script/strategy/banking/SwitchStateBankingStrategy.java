@@ -19,6 +19,7 @@ import script.strategy.grand_exchange.SellGrandExchangeStrategy;
 import script.strategy.muling.MulingStrategy;
 import script.utils.GameItem;
 
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -86,7 +87,10 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private boolean checkAndHandleCoinConditions(MainScript script) {
-        if (tooManyCoins(script)) {
+        LocalTime currentTime = LocalTime.now();
+        LocalTime startTime = LocalTime.of(21, 0);
+        LocalTime endTime = LocalTime.of(21, 30);
+        if (tooManyCoins(script) && currentTime.isAfter(startTime) && currentTime.isBefore(endTime)) {
             script.log("Too many coins, transition to muling state");
             handleTooManyCoins(script);
             return true;
@@ -119,7 +123,8 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
 
     private void performBankingActions(Script script) throws InterruptedException {
         depositInventoryAndEquipment(script);
-        if (returnState instanceof CraftingState && !Banks.EDGEVILLE.contains(script.myPlayer())){
+        int craftingLevel = script.getSkills().getStatic(Skill.CRAFTING);
+        if (returnState instanceof CraftingState && !Banks.EDGEVILLE.contains(script.myPlayer()) && craftingLevel >= 5){
             script.log("Walking to Edgeville bank to get crafting supplies"); // needed to not run from GE with gold bars etc
             script.getWalking().webWalk(Banks.EDGEVILLE);
         }
@@ -148,7 +153,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private boolean tooManyCoins(Script script){
-        return getTotalItemAmount(script, GameItem.COINS.getName()) > 1000000;
+        return getTotalItemAmount(script, GameItem.COINS.getName()) > 10000000;
     }
 
     private boolean tooLittleCoins(Script script){

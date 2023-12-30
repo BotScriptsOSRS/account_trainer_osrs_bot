@@ -2,6 +2,7 @@ package script.strategy.crafting;
 
 import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.Position;
+import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.api.ui.RS2Widget;
 import org.osbot.rs07.script.Script;
@@ -14,7 +15,7 @@ import java.util.function.Supplier;
 
 public class EmeraldRingStrategy implements TaskStrategy {
 
-    private static final Area FURNACE_AREA = new Area(3110, 3497, 3106, 3500);
+    private static final Area FURNACE_AREA = new Area(3110, 3496, 3105, 3501);
     private static final Position FURNACE_POSITION = new Position(3109,3499,0);
     private static final int EMERALD_RING_WIDGET_X = 141;
     private static final int EMERALD_RING_WIDGET_Y = 87;
@@ -32,6 +33,9 @@ public class EmeraldRingStrategy implements TaskStrategy {
 
     private void moveToAreaIfNeeded(Script script) {
         if (!FURNACE_AREA.contains(script.myPlayer())) {
+            if (!Banks.EDGEVILLE.contains(script.myPlayer())){
+                script.getWalking().webWalk(FURNACE_POSITION);
+            }
             script.getWalking().walk(FURNACE_POSITION);
         }
     }

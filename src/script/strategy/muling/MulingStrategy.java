@@ -1,7 +1,6 @@
 package script.strategy.muling;
 
 import org.osbot.rs07.api.map.Area;
-import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
@@ -13,8 +12,8 @@ import java.util.concurrent.Callable;
 public class MulingStrategy implements TaskStrategy {
 
     private final int SLEEP_DURATION_MS = 5000;
-    private static final Area mulingArea = new Area(2969, 3353, 2967, 3351).setPlane(1);
-    private static final Position mulingPosition = new Position(2969,3351,1);
+    private static final Area mulingArea = Banks.GRAND_EXCHANGE;
+    private static final Area mulingWalkTo = new Area(3162, 3487, 3167, 3487);
 
     @Override
     public void execute(Script script) throws InterruptedException {
@@ -33,14 +32,8 @@ public class MulingStrategy implements TaskStrategy {
 
     private void handleCoinsInInventory(Script script) throws InterruptedException {
         if (!script.getInventory().contains(GameItem.COINS.getId())) {
-            walkToFaladorBank(script);
+            walkToMulingArea(script);
             checkBankForCoins(script);
-        }
-    }
-
-    private void walkToFaladorBank(Script script) {
-        if (!Banks.FALADOR_WEST.contains(script.myPlayer())) {
-            script.getWalking().webWalk(Banks.FALADOR_WEST);
         }
     }
 
@@ -52,9 +45,7 @@ public class MulingStrategy implements TaskStrategy {
 
     private void walkToMulingArea(Script script) {
         if (!mulingArea.contains(script.myPlayer())) {
-            script.log("Try to walk to muling position");
-            script.log(mulingPosition.getArea(2));
-            script.getWalking().webWalk(mulingPosition);
+            script.getWalking().webWalk(mulingWalkTo);
         }
     }
 

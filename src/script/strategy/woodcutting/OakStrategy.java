@@ -1,6 +1,7 @@
 package script.strategy.woodcutting;
 
 import org.osbot.rs07.api.map.Area;
+import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
@@ -37,6 +38,9 @@ public class OakStrategy implements TaskStrategy {
 
     private void walkToWoodcuttingArea(Script script) {
         script.log("Walking to woodcutting area");
+        if (!Banks.DRAYNOR.contains(script.myPlayer())){
+            script.getWalking().webWalk(woodcuttingArea);
+        }
         script.getWalking().walk(woodcuttingArea);
     }
 
