@@ -19,7 +19,6 @@ import java.util.List;
 public class MainScript extends Script {
 
     private static final int npcId = 3648;
-    private static final int plankId = 2084;
     private static final Position boatPositionPortSarim = new Position(3032,3217,1);
     private final Area portSarimArea = new Area(3026, 3216, 3029, 3219);
     private final Area karamjaArea = new Area(2962, 3145, 2912, 3182);
@@ -46,8 +45,8 @@ public class MainScript extends Script {
     private void registerState(Class<? extends BotState> stateClass) {
         try {
             stateMap.put(stateClass, stateClass.getDeclaredConstructor(MainScript.class).newInstance(this));
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -77,14 +76,14 @@ public class MainScript extends Script {
             newState = stateMap.get(stateClass);
         } while (newState.equals(excludeState));
 
-        // If the new state is not FishingState and the character is on Karamja, leave Karamja
-        if (!(newState instanceof FishingState) && karamjaArea.contains(this.myPlayer())) {
+        if (!(currentState instanceof FishingState) && karamjaArea.contains(this.myPlayer())) {
             try {
                 leaveKaramja(this);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
+
         newState.enterState(this);
         return newState;
     }
@@ -99,8 +98,13 @@ public class MainScript extends Script {
         if (!karamjaPortArea.contains(script.myPlayer())){
             script.getWalking().webWalk(karamjaPortArea);
         }
-        interactWithNpc(script);
-        crossPlank(script);
+        if (karamjaPortArea.contains(script.myPlayer())){
+            interactWithNpc(script);
+            waitForArrivalInPortSarim(script);
+        }
+        if (script.myPlayer().getPosition().equals(boatPositionPortSarim)){
+            crossPlank(script);
+        }
     }
 
     private void interactWithNpc(Script script) throws InterruptedException {
@@ -108,10 +112,10 @@ public class MainScript extends Script {
             NPC npcForDeposit = script.getNpcs().closest(npcId);
             if (npcForDeposit != null && npcForDeposit.interact("Pay-fare")) {
                 waitForDialogue(script);
-                completeDialogueForDeposit(script);
+                completeDialogue(script);
             }
         } else {
-            completeDialogueForDeposit(script);
+            completeDialogue(script);
         }
     }
 
@@ -124,7 +128,7 @@ public class MainScript extends Script {
         }.sleep();
     }
 
-    private void completeDialogueForDeposit(Script script) throws InterruptedException {
+    private void completeDialogue(Script script) throws InterruptedException {
         String[] dialogueOptions = {"Can I journey on this ship?",
                 "Search away, I have nothing to hide.", "Ok."};
         if (script.getDialogues().isPendingContinuation()) {
@@ -133,8 +137,7 @@ public class MainScript extends Script {
     }
 
     private void crossPlank(Script script) {
-        waitForArrivalInPortSarim(script);
-        Entity plankForDeposit = script.getObjects().closest(plankId);
+        Entity plankForDeposit = script.getObjects().closest("Gangplank");
         if (plankForDeposit != null && plankForDeposit.interact("Cross")) {
             new ConditionalSleep(5000, 500) {
                 @Override

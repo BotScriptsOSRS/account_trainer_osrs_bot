@@ -4,6 +4,7 @@ import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.api.model.NPC;
+import org.osbot.rs07.script.MethodProvider;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
@@ -14,8 +15,6 @@ import java.util.Arrays;
 public class LobsterPotStrategy implements TaskStrategy {
 
     private static final int lobsterPotFishingSpotId = 1522;
-    private static final int plankIdPortKaramja = 2082;
-    private static final int plankIdPortSarim = 2084;
     private static final int npcIdPortKaramja = 3648;
     private static final int[] npcIds = {3644, 3645, 3646};
     private static final Position boatPositionKaramja = new Position(2956,3143,1);
@@ -50,9 +49,14 @@ public class LobsterPotStrategy implements TaskStrategy {
         script.log("Walking to lobster pot fishing area");
         if (karamjaArea.contains(script.myPlayer())) {
             script.getWalking().webWalk(fishingArea);
-        } else {
+        } else if (!script.myPlayer().getPosition().equals(boatPositionKaramja) && !portSarimArea.contains(script.myPlayer())) {
             script.getWalking().webWalk(portSarimArea);
+        }
+        if (portSarimArea.contains(script.myPlayer())){
             handleDialoguePortSarim(script);
+        }
+        if (script.myPlayer().getPosition().equals(boatPositionKaramja)){
+            crossPlank(script);
             script.getWalking().webWalk(fishingArea);
         }
     }
@@ -62,7 +66,7 @@ public class LobsterPotStrategy implements TaskStrategy {
 
         if (closestNpc != null && closestNpc.interact("Pay-fare")) {
             waitForDialogue(script);
-            completeDialogueAndCrossPlank(script);
+            completeDialogue(script);
         }
     }
 
@@ -79,12 +83,15 @@ public class LobsterPotStrategy implements TaskStrategy {
         }.sleep();
     }
 
-    private void completeDialogueAndCrossPlank(Script script) throws InterruptedException {
+    private void completeDialogue(Script script) throws InterruptedException {
         if (script.getDialogues().isPendingContinuation()) {
             script.getDialogues().completeDialogue("Yes please.");
         }
         waitForArrivalInKaramja(script);
-        Entity plank = script.getObjects().closest(plankIdPortKaramja);
+    }
+
+    private void crossPlank(Script script){
+        Entity plank = script.getObjects().closest("Gangplank");
         if (plank != null && plank.interact("Cross")) {
             new ConditionalSleep(5000, 500) {
                 @Override
@@ -95,24 +102,32 @@ public class LobsterPotStrategy implements TaskStrategy {
         }
     }
 
-    private void waitForArrivalInKaramja(Script script) {
+    private void waitForArrivalInKaramja(Script script) throws InterruptedException {
         new ConditionalSleep(10000, 500) {
             @Override
             public boolean condition() {
-                return boatPositionKaramja.equals(script.myPlayer().getPosition());
+                return script.getObjects().closest("Gangplank").interact("Cross");
             }
         }.sleep();
-
-        script.getWalking().webWalk(fishingArea);
+        MethodProvider.sleep(2000);
     }
 
     private void handleFullInventory(Script script) throws InterruptedException {
         script.log("Inventory full, walking to deposit box");
-        if (!karamjaPortArea.contains(script.myPlayer())){
+        if (!karamjaPortArea.contains(script.myPlayer()) && karamjaArea.contains(script.myPlayer())){
             script.getWalking().webWalk(karamjaPortArea);
         }
-        interactWithNpcForDeposit(script);
-        crossPlankAndDepositItems(script);
+        if (karamjaPortArea.contains(script.myPlayer())){
+            interactWithNpcForDeposit(script);
+            waitForArrivalInPortSarim(script);
+        }
+        if (script.myPlayer().getPosition().equals(boatPositionPortSarim)){
+            crossPlank(script);
+        }
+        if (!depositBoxArea.contains(script.myPlayer()) && !script.myPlayer().getPosition().equals(boatPositionPortSarim)){
+            script.getWalking().webWalk(depositBoxArea);
+            depositItems(script);
+        }
     }
 
     private void interactWithNpcForDeposit(Script script) throws InterruptedException {
@@ -134,27 +149,11 @@ public class LobsterPotStrategy implements TaskStrategy {
         }
     }
 
-    private void crossPlankAndDepositItems(Script script) {
-        waitForArrivalInPortSarim(script);
-        Entity plankForDeposit = script.getObjects().closest(plankIdPortSarim);
-        if (plankForDeposit != null && plankForDeposit.interact("Cross")) {
-            new ConditionalSleep(5000, 500) {
-                @Override
-                public boolean condition() {
-                    return portSarimArea.contains(script.myPlayer());
-                }
-            }.sleep();
-        }
-        script.getWalking().webWalk(depositBoxArea);
-        depositItems(script);
-
-    }
-
     private void waitForArrivalInPortSarim(Script script) {
         new ConditionalSleep(10000, 500) {
             @Override
             public boolean condition() {
-                return boatPositionPortSarim.equals(script.myPlayer().getPosition());
+                return script.getObjects().closest("Gangplank").interact("Cross");
             }
         }.sleep();
     }
