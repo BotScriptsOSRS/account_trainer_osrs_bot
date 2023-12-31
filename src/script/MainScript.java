@@ -20,7 +20,7 @@ public class MainScript extends Script {
 
     private static final int npcId = 3648;
     private static final Position boatPositionPortSarim = new Position(3032,3217,1);
-    private final Area portSarimArea = new Area(3026, 3216, 3029, 3219);
+    private static final Position outsideBoatPositionPortSarim= new Position(3029,3217,0);
     private final Area karamjaArea = new Area(2962, 3145, 2912, 3182);
     private static final Area karamjaPortArea = new Area(2950, 3144, 2961, 3152);
     private BotState currentState;
@@ -42,23 +42,38 @@ public class MainScript extends Script {
         currentState = pickRandomState(null);
     }
 
+    @Override
+    public int onLoop() throws InterruptedException {
+        if (shouldLeaveKaramja()) {
+            leaveKaramja(this);
+        } else {
+            currentState.execute(this);
+            if (!stateChanged) {
+                currentState = pickRandomState(currentState);
+            }
+        }
+        osdPainter.checkForNewSkills();
+        stateChanged = false;
+        return random(200, 300);
+    }
+
+    @Override
+    public void onPaint(Graphics2D g) {
+        osdPainter.onPaint(g);
+    }
+
+    @Override
+    public void onExit(){
+        log("Thank you for using Account Trainer");
+        stop();
+    }
+
     private void registerState(Class<? extends BotState> stateClass) {
         try {
             stateMap.put(stateClass, stateClass.getDeclaredConstructor(MainScript.class).newInstance(this));
         } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public int onLoop() throws InterruptedException {
-        currentState.execute(this);
-        if (!stateChanged) {
-            currentState = currentState.nextState(this);
-        }
-        osdPainter.checkForNewSkills();
-        stateChanged = false;
-        return random(200, 300);
     }
 
     public void setCurrentState(BotState newState) {
@@ -76,25 +91,16 @@ public class MainScript extends Script {
             newState = stateMap.get(stateClass);
         } while (newState.equals(excludeState));
 
-        if (!(currentState instanceof FishingState) && karamjaArea.contains(this.myPlayer())) {
-            try {
-                leaveKaramja(this);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
         newState.enterState(this);
         return newState;
     }
 
-    @Override
-    public void onPaint(Graphics2D g) {
-        osdPainter.onPaint(g);
+    private boolean shouldLeaveKaramja() {
+        return karamjaArea.contains(this.myPlayer()) && !(currentState instanceof FishingState);
     }
 
     private void leaveKaramja(Script script) throws InterruptedException {
-        script.log("Leaving Karamja before switching states");
+        script.log("Leaving Karamja");
         if (!karamjaPortArea.contains(script.myPlayer())){
             script.getWalking().webWalk(karamjaPortArea);
         }
@@ -137,23 +143,26 @@ public class MainScript extends Script {
     }
 
     private void crossPlank(Script script) {
+        script.log("Crossing plank");
         Entity plankForDeposit = script.getObjects().closest("Gangplank");
         if (plankForDeposit != null && plankForDeposit.interact("Cross")) {
             new ConditionalSleep(5000, 500) {
                 @Override
                 public boolean condition() {
-                    return portSarimArea.contains(script.myPlayer());
+                    return outsideBoatPositionPortSarim.equals(script.myPlayer().getPosition());
                 }
             }.sleep();
         }
     }
 
     private void waitForArrivalInPortSarim(Script script) {
+        script.log("Wait for arrival in Port Sarim");
         new ConditionalSleep(10000, 500) {
             @Override
             public boolean condition() {
                 return boatPositionPortSarim.equals(script.myPlayer().getPosition());
             }
         }.sleep();
+        script.log("Arrived in Port Sarim");
     }
 }
