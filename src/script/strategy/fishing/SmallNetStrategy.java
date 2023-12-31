@@ -3,12 +3,11 @@ package script.strategy.fishing;
 import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+import script.utils.Sleep;
 
 public class SmallNetStrategy implements TaskStrategy {
 
-    private static final int NET_FISHING_SPOT_ID = 1530;
     private final Area fishingArea = new Area(3237, 3139, 3249, 3162);
 
     public SmallNetStrategy() {
@@ -42,7 +41,7 @@ public class SmallNetStrategy implements TaskStrategy {
     }
 
     private void startFishing(Script script) {
-        NPC fishingSpot = script.getNpcs().closest(NET_FISHING_SPOT_ID);
+        NPC fishingSpot = script.getNpcs().closest("Net Fishing spot");
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
             if (fishingSpot.interact("Net")) {
                 waitForFishingAnimation(script);
@@ -51,11 +50,6 @@ public class SmallNetStrategy implements TaskStrategy {
     }
 
     private void waitForFishingAnimation(Script script) {
-        new ConditionalSleep(5000, 1000) {
-            @Override
-            public boolean condition() {
-                return script.myPlayer().isAnimating();
-            }
-        }.sleep();
+        Sleep.sleepUntil(() -> script.myPlayer().isAnimating(), 5000);
     }
 }

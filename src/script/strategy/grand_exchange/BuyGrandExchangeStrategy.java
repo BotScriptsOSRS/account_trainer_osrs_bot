@@ -4,9 +4,10 @@ import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+import script.utils.BankingUtils;
 import script.utils.GameItem;
+import script.utils.Sleep;
 
 import java.util.Map;
 
@@ -48,12 +49,7 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
     }
 
     private void waitForGrandExchangeToClose(Script script) {
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return !script.getGrandExchange().isOpen();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> !script.getGrandExchange().isOpen(), SLEEP_DURATION_MS);
     }
 
     private void buyAndCollectItems(Script script) {
@@ -65,20 +61,9 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
             int adjustedPrice = adjustPriceBasedOnTier(itemPrice, entry.getValue());
 
             final int finalPrice = adjustedPrice;
-            script.log("Buying item: " + entry.getKey() + " for price: " + adjustedPrice);
-            new ConditionalSleep(SLEEP_DURATION_MS, 500) {
-                @Override
-                public boolean condition() {
-                    return script.getGrandExchange().buyItem(itemId, entry.getKey(), finalPrice, entry.getValue());
-                }
-            }.sleep();
-
-            new ConditionalSleep(SLEEP_DURATION_MS, 500) {
-                @Override
-                public boolean condition() {
-                    return script.getGrandExchange().collect();
-                }
-            }.sleep();
+            script.log("Buying "+ entry.getValue() + " of " + entry.getKey() + " for " + entry.getValue()*adjustedPrice);
+            Sleep.sleepUntil(()-> script.getGrandExchange().buyItem(itemId, entry.getKey(), finalPrice, entry.getValue()), SLEEP_DURATION_MS);
+            Sleep.sleepUntil(()->  script.getGrandExchange().collect(true), SLEEP_DURATION_MS);
         }
     }
 
@@ -101,12 +86,7 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
     private void openGrandExchange(Script script) {
         NPC npc = script.getNpcs().closest("Grand Exchange Clerk");
         if (npc != null && npc.interact("Exchange")) {
-            new ConditionalSleep(SLEEP_DURATION_MS, 500) {
-                @Override
-                public boolean condition() {
-                    return script.getGrandExchange().isOpen();
-                }
-            }.sleep();
+            Sleep.sleepUntil(()-> script.getGrandExchange().isOpen(), SLEEP_DURATION_MS);
         }
     }
 
@@ -120,49 +100,12 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
     }
 
     private void checkBankForCoins(Script script) throws InterruptedException {
-        openBankWithRetry(script);
+        BankingUtils.openBankWithRetry(script);
         if (withdrawCoins(script)){
             closeBank(script);
         } else {
             sellStrategy.execute(script);
         }
-    }
-
-    private void openBankWithRetry(Script script) throws InterruptedException {
-        int MAX_ATTEMPTS = 3;
-        for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            if (openBank(script)) {
-                return;
-            }
-            script.log("Attempt to open bank failed, retrying...");
-            new ConditionalSleep(SLEEP_DURATION_MS) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().isOpen();
-                }
-            }.sleep();
-        }
-        script.log("Failed to open bank after multiple attempts");
-    }
-
-    private boolean openBank(Script script) throws InterruptedException {
-        if (script.getBank().isOpen()) {
-            return true;
-        }
-        return attemptToOpenBank(script);
-    }
-
-    private boolean attemptToOpenBank(Script script) throws InterruptedException {
-        if (script.getBank().open()) {
-            return new ConditionalSleep(10000, 1000) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().isOpen();
-                }
-            }.sleep();
-        }
-        script.log("Failed to open the bank");
-        return false;
     }
 
     private boolean withdrawCoins(Script script) {
@@ -176,12 +119,7 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
     }
 
     private void waitForItemInInventory(Script script, String itemName) {
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return script.getInventory().contains(itemName);
-            }
-        }.sleep();
+        Sleep.sleepUntil(()->  script.getInventory().contains(itemName), SLEEP_DURATION_MS);
     }
 
     private void closeBank(Script script) {
@@ -191,11 +129,6 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
     }
 
     private void waitForBankToClose(Script script) {
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return !script.getBank().isOpen();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()->  !script.getBank().isOpen(), SLEEP_DURATION_MS);
     }
 }

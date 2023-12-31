@@ -5,7 +5,7 @@ import script.MainScript;
 import script.strategy.banking.SwitchStateBankingStrategy;
 import script.strategy.TaskStrategy;
 import script.strategy.fishing.FlyStrategy;
-import script.strategy.fishing.LobsterPotStrategy;
+import script.strategy.fishing.KaramjaStrategy;
 import script.strategy.fishing.SmallNetStrategy;
 import script.utils.GameItem;
 
@@ -40,8 +40,10 @@ public class FishingState implements BotState {
             this.strategy = new SmallNetStrategy();
         } else if (fishingLevel < 40) {
             this.strategy = new FlyStrategy();
-        } else {
-            this.strategy = new LobsterPotStrategy();
+        } else if (fishingLevel < 60){
+            this.strategy = new KaramjaStrategy("Cage Fishing spot");
+        } else{
+            this.strategy = new KaramjaStrategy("Harpoon Fishing spot");
         }
     }
 
@@ -66,8 +68,11 @@ public class FishingState implements BotState {
         } else if (fishingLevel < 40) {
             requiredItems.add(GameItem.FLY_FISHING_ROD.getId());
             requiredItems.add(GameItem.FEATHER.getId());
-        } else {
+        } else if (fishingLevel < 60){
             requiredItems.add(GameItem.LOBSTER_POT.getId());
+            requiredItems.add(GameItem.COINS.getId());
+        } else {
+            requiredItems.add(GameItem.HARPOON.getId());
             requiredItems.add(GameItem.COINS.getId());
         }
 
@@ -82,12 +87,17 @@ public class FishingState implements BotState {
             itemsToBuy.add(GameItem.FEATHER.getId());
             itemsToBuy.add(GameItem.FLY_FISHING_ROD.getId());
             itemsToBuy.add(GameItem.LOBSTER_POT.getId());
+            itemsToBuy.add(GameItem.HARPOON.getId());
         } else if (fishingLevel < 40) {
             itemsToBuy.add(GameItem.FEATHER.getId());
             itemsToBuy.add(GameItem.FLY_FISHING_ROD.getId());
             itemsToBuy.add(GameItem.LOBSTER_POT.getId());
-        } else {
+            itemsToBuy.add(GameItem.HARPOON.getId());
+        } else if (fishingLevel < 60){
             itemsToBuy.add(GameItem.LOBSTER_POT.getId());
+            itemsToBuy.add(GameItem.HARPOON.getId());
+        } else {
+            itemsToBuy.add(GameItem.HARPOON.getId());
         }
         return itemsToBuy;
     }

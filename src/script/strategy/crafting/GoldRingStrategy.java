@@ -6,12 +6,11 @@ import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.api.ui.RS2Widget;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
 import script.utils.GameItem;
+import script.utils.Sleep;
 
 import java.awt.*;
-import java.util.function.Supplier;
 
 public class GoldRingStrategy implements TaskStrategy {
 
@@ -43,13 +42,13 @@ public class GoldRingStrategy implements TaskStrategy {
     private void smeltGoldRing(Script script) {
         Entity furnace = script.getObjects().closest("Furnace");
         if (furnace != null && furnace.interact("Smelt") && !script.myPlayer().isAnimating()) {
-            sleepUntil(() -> isGoldRingWidgetWorking(script), SMELT_SLEEP_TIME_MS);
+            Sleep.sleepUntil(() -> isGoldRingWidgetWorking(script), SMELT_SLEEP_TIME_MS);
         }
     }
 
     private void craftGoldRings(Script script) {
         if (getGoldRingWidget(script) != null && getGoldRingWidget(script).interact()) {
-            sleepUntil(() -> !script.getInventory().contains(GameItem.GOLD_BAR.getId()) || isLevelUpWidgetWorking(script), CRAFT_SLEEP_TIME_MS);
+            Sleep.sleepUntil(() -> !script.getInventory().contains(GameItem.GOLD_BAR.getId()) || isLevelUpWidgetWorking(script), CRAFT_SLEEP_TIME_MS);
         }
     }
 
@@ -75,14 +74,5 @@ public class GoldRingStrategy implements TaskStrategy {
                 script.getWidgets().getAll(),
                 widget -> widget.isVisible() && widget.getMessage().contains("Click here to continue")
         );
-    }
-
-    private void sleepUntil(Supplier<Boolean> condition, int duration) {
-        new ConditionalSleep(duration, 1000) {
-            @Override
-            public boolean condition() {
-                return condition.get();
-            }
-        }.sleep();
     }
 }

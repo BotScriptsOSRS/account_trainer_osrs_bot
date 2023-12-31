@@ -4,8 +4,9 @@ import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Item;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+import script.utils.BankingUtils;
+import script.utils.Sleep;
 
 import java.util.Set;
 
@@ -48,37 +49,12 @@ public class DepositAllBankingStrategy implements TaskStrategy {
         if (!isAtBank(script)) {
             walkToNearestBank(script);
         }
-        return openBankWithRetry(script);
+        return BankingUtils.openBankWithRetry(script);
     }
 
     private void walkToNearestBank(Script script) {
         script.log("Walking to the nearest F2P bank");
         script.getWalking().webWalk(BANKS);
-    }
-
-    private boolean openBankWithRetry(Script script) throws InterruptedException {
-        int MAX_ATTEMPTS = 3;
-        for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            if (openBank(script)) {
-                return true;
-            }
-            script.log("Attempt to open bank failed, retrying...");
-            new ConditionalSleep(SLEEP_DURATION_MS) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().isOpen();
-                }
-            }.sleep();
-        }
-        script.log("Failed to open bank after multiple attempts");
-        return false;
-    }
-
-    private boolean openBank(Script script) throws InterruptedException {
-        if (script.getBank().isOpen()) {
-            return true;
-        }
-        return attemptToOpenBank(script);
     }
 
     private boolean isAtBank(Script script) {
@@ -90,30 +66,12 @@ public class DepositAllBankingStrategy implements TaskStrategy {
         return false;
     }
 
-    private boolean attemptToOpenBank(Script script) throws InterruptedException {
-        if (script.getBank().open()) {
-            return new ConditionalSleep(10000, 1000) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().isOpen();
-                }
-            }.sleep();
-        }
-        script.log("Failed to open the bank");
-        return false;
-    }
-
     private void depositAllExceptItemsToKeep(Script script) {
         script.log("Depositing all items except specified items to keep");
         for (Item item : script.getInventory().getItems()) {
             if (item != null && !itemsToKeep.contains(item.getId())) {
                 script.getBank().depositAll(item.getId());
-                new ConditionalSleep(SLEEP_DURATION_MS) {
-                    @Override
-                    public boolean condition() {
-                        return !script.getInventory().contains(item.getId());
-                    }
-                }.sleep();
+                Sleep.sleepUntil(()-> !script.getInventory().contains(item.getId()), SLEEP_DURATION_MS);
             }
         }
     }
@@ -121,11 +79,6 @@ public class DepositAllBankingStrategy implements TaskStrategy {
     private void closeBank(Script script) {
         script.log("Closing the bank");
         script.getBank().close();
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return !script.getBank().isOpen();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> !script.getBank().isOpen(), SLEEP_DURATION_MS);
     }
 }

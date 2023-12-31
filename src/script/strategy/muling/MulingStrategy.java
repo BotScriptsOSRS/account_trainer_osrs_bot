@@ -4,9 +4,10 @@ import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.script.MethodProvider;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+import script.utils.BankingUtils;
 import script.utils.GameItem;
+import script.utils.Sleep;
 
 import java.util.concurrent.Callable;
 
@@ -80,12 +81,12 @@ public class MulingStrategy implements TaskStrategy {
     }
 
     private boolean shouldInitiateTrade(Script script) {
-        return script.getPlayers().closest("Wornhope2131") != null && !script.getTrade().isCurrentlyTrading();
+        return script.getPlayers().closest(script.getParameters()) != null && !script.getTrade().isCurrentlyTrading();
     }
 
     private void initiateTrade(Script script) {
         script.log("Initiating trade");
-        waitForCondition(() -> script.getPlayers().closest("Wornhope2131").interact("Trade with"));
+        waitForCondition(() -> script.getPlayers().closest(script.getParameters()).interact("Trade with"));
         waitForCondition(() -> script.getTrade().isFirstInterfaceOpen());
     }
 
@@ -113,63 +114,23 @@ public class MulingStrategy implements TaskStrategy {
     }
 
     private void waitForCondition(Callable<Boolean> condition) {
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                try {
-                    return condition.call();
-                } catch (Exception e) {
-                    return false;
-                }
+        Sleep.sleepUntil(()-> {
+            try {
+                return condition.call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        }.sleep();
+        }, SLEEP_DURATION_MS);
     }
 
     private void checkBankForCoins(Script script) throws InterruptedException {
-        openBankWithRetry(script);
+        BankingUtils.openBankWithRetry(script);
         if (withdrawCoins(script)){
             closeBank(script);
         }
         if (script.getBank().isOpen()){
             closeBank(script);
         }
-    }
-
-    private void openBankWithRetry(Script script) throws InterruptedException {
-        int MAX_ATTEMPTS = 3;
-        for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            if (openBank(script)) {
-                return;
-            }
-            script.log("Attempt to open bank failed, retrying...");
-            new ConditionalSleep(SLEEP_DURATION_MS) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().isOpen();
-                }
-            }.sleep();
-        }
-        script.log("Failed to open bank after multiple attempts");
-    }
-
-    private boolean openBank(Script script) throws InterruptedException {
-        if (script.getBank().isOpen()) {
-            return true;
-        }
-        return attemptToOpenBank(script);
-    }
-
-    private boolean attemptToOpenBank(Script script) throws InterruptedException {
-        if (script.getBank().open()) {
-            return new ConditionalSleep(10000, 1000) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().isOpen();
-                }
-            }.sleep();
-        }
-        script.log("Failed to open the bank");
-        return false;
     }
 
     private boolean withdrawCoins(Script script) {
@@ -185,12 +146,7 @@ public class MulingStrategy implements TaskStrategy {
     }
 
     private void waitForItemInInventory(Script script, String itemName) {
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return script.getInventory().contains(itemName);
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> script.getInventory().contains(itemName), SLEEP_DURATION_MS);
     }
 
     private void closeBank(Script script) {
@@ -200,11 +156,6 @@ public class MulingStrategy implements TaskStrategy {
     }
 
     private void waitForBankToClose(Script script) {
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return !script.getBank().isOpen();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> !script.getBank().isOpen(), SLEEP_DURATION_MS);
     }
 }

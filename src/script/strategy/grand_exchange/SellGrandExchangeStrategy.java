@@ -6,9 +6,10 @@ import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Item;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+import script.utils.BankingUtils;
 import script.utils.SellableItems;
+import script.utils.Sleep;
 
 
 public class SellGrandExchangeStrategy implements TaskStrategy {
@@ -40,12 +41,7 @@ public class SellGrandExchangeStrategy implements TaskStrategy {
     }
 
     private void waitForGrandExchangeToClose(Script script) {
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return !script.getGrandExchange().isOpen();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()->!script.getGrandExchange().isOpen(), SLEEP_DURATION_MS);
     }
 
     private void sellAndCollectItems(Script script) {
@@ -57,20 +53,9 @@ public class SellGrandExchangeStrategy implements TaskStrategy {
                     final int finalPrice = determineSellPrice(script, itemId);
                     script.log("Selling item: " + item.getName() + " for price: " + finalPrice);
                     // Initiate the selling process
-                    new ConditionalSleep(SLEEP_DURATION_MS, 500) {
-                        @Override
-                        public boolean condition() {
-                            return script.getGrandExchange().sellItem(item.getId(), finalPrice, item.getAmount());
-                        }
-                    }.sleep();
-
+                    Sleep.sleepUntil(()->script.getGrandExchange().sellItem(item.getId(), finalPrice, item.getAmount()), SLEEP_DURATION_MS);
                     // Collect coins or any unsold items
-                    new ConditionalSleep(SLEEP_DURATION_MS, 500) {
-                        @Override
-                        public boolean condition() {
-                            return script.getGrandExchange().collect();
-                        }
-                    }.sleep();
+                    Sleep.sleepUntil(()->script.getGrandExchange().collect(true), SLEEP_DURATION_MS);
                 }
             }
         }
@@ -84,36 +69,21 @@ public class SellGrandExchangeStrategy implements TaskStrategy {
     private void openGrandExchange(Script script) {
         NPC npc = script.getNpcs().closest("Grand Exchange Clerk");
         if (npc != null && npc.interact("Exchange")) {
-            new ConditionalSleep(SLEEP_DURATION_MS, 500) {
-                @Override
-                public boolean condition() {
-                    return script.getGrandExchange().isOpen();
-                }
-            }.sleep();
+            Sleep.sleepUntil(()-> script.getGrandExchange().isOpen(), SLEEP_DURATION_MS);
         }
     }
+
     private void retrieveItemsFromBank(Script script) throws InterruptedException {
         if (!script.getBank().isOpen()){
-            openBankWithRetry(script);
+            BankingUtils.openBankWithRetry(script);
         }
-        if (!script.getBank().isBankModeEnabled(Bank.BankMode.WITHDRAW_NOTE)){
-            new ConditionalSleep(SLEEP_DURATION_MS) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().enableMode(Bank.BankMode.WITHDRAW_NOTE);
-                }
-            }.sleep();
+        if (!script.getBank().isBankModeEnabled(Bank.BankMode.WITHDRAW_NOTE) && script.getBank().enableMode(Bank.BankMode.WITHDRAW_NOTE)){
+            Sleep.sleepUntil(()-> script.getBank().isBankModeEnabled(Bank.BankMode.WITHDRAW_NOTE), SLEEP_DURATION_MS);
         }
-
         for (SellableItems item : SellableItems.values()) {
-            if (script.getBank().contains(item.getName())) {
+            if (script.getBank().contains(item.getName()) && script.getBank().withdrawAll(item.getName())) {
                 script.log("Withdrawing " + item.getName());
-                new ConditionalSleep(SLEEP_DURATION_MS) {
-                    @Override
-                    public boolean condition() {
-                        return script.getBank().withdrawAll(item.getName());
-                    }
-                }.sleep();
+                Sleep.sleepUntil(()-> !script.getBank().contains(item.getName()), SLEEP_DURATION_MS);
             }
         }
         closeBank(script);
@@ -122,49 +92,7 @@ public class SellGrandExchangeStrategy implements TaskStrategy {
     private void closeBank(Script script) {
         script.log("Closing the bank");
         script.getBank().close();
-        new ConditionalSleep(SLEEP_DURATION_MS) {
-            @Override
-            public boolean condition() {
-                return !script.getBank().isOpen();
-            }
-        }.sleep();
-    }
-
-    private void openBankWithRetry(Script script) throws InterruptedException {
-        int MAX_ATTEMPTS = 3;
-        for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            if (openBank(script)) {
-                return;
-            }
-            script.log("Attempt to open bank failed, retrying...");
-            new ConditionalSleep(SLEEP_DURATION_MS) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().isOpen();
-                }
-            }.sleep();
-        }
-        script.log("Failed to open bank after multiple attempts");
-    }
-
-    private boolean openBank(Script script) throws InterruptedException {
-        if (script.getBank().isOpen()) {
-            return true;
-        }
-        return attemptToOpenBank(script);
-    }
-
-    private boolean attemptToOpenBank(Script script) throws InterruptedException {
-        if (script.getBank().open()) {
-            return new ConditionalSleep(10000, 1000) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().isOpen();
-                }
-            }.sleep();
-        }
-        script.log("Failed to open the bank");
-        return false;
+        Sleep.sleepUntil(()-> !script.getBank().isOpen(), SLEEP_DURATION_MS);
     }
 
     private boolean isInGrandExchangeArea(Script script) {

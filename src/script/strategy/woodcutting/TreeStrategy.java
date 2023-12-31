@@ -4,8 +4,8 @@ import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.Position;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+import script.utils.Sleep;
 
 public class TreeStrategy implements TaskStrategy {
 
@@ -73,11 +73,6 @@ public class TreeStrategy implements TaskStrategy {
     }
 
     private void waitForWoodcuttingToStart(Script script) {
-        new ConditionalSleep(8000, 1500) {
-            @Override
-            public boolean condition() {
-                return script.myPlayer().isAnimating();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> script.myPlayer().isAnimating(), 8000);
     }
 }

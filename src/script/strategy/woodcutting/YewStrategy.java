@@ -4,10 +4,10 @@ import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.MainScript;
 import script.state.WoodcuttingState;
 import script.strategy.TaskStrategy;
+import script.utils.Sleep;
 
 public class YewStrategy implements TaskStrategy {
 
@@ -70,11 +70,6 @@ public class YewStrategy implements TaskStrategy {
     }
 
     private void waitForWoodcuttingToStart(Script script) {
-        new ConditionalSleep(8000, 1500) {
-            @Override
-            public boolean condition() {
-                return script.myPlayer().isAnimating();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> script.myPlayer().isAnimating(), 8000);
     }
 }

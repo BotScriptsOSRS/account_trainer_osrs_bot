@@ -7,7 +7,6 @@ import org.osbot.rs07.api.model.Item;
 import org.osbot.rs07.api.ui.Skill;
 import org.osbot.rs07.script.MethodProvider;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.MainScript;
 import script.state.BotState;
 import script.state.CraftingState;
@@ -17,8 +16,10 @@ import script.strategy.TaskStrategy;
 import script.strategy.grand_exchange.BuyGrandExchangeStrategy;
 import script.strategy.grand_exchange.SellGrandExchangeStrategy;
 import script.strategy.muling.MulingStrategy;
+import script.utils.BankingUtils;
 import script.utils.GameItem;
 import script.utils.SellableItems;
+import script.utils.Sleep;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -27,9 +28,7 @@ import java.util.stream.Collectors;
 import static org.osbot.rs07.script.MethodProvider.random;
 
 public class SwitchStateBankingStrategy implements TaskStrategy {
-    private static final int MAX_BANK_ATTEMPTS = 3;
-    private static final int BANK_OPEN_WAIT_MS = 10000;
-    private static final int BANK_RETRY_WAIT_MS = 5000;
+
     private static final int ITEM_INTERACT_WAIT_MS = 5000;
     private static final int SLEEP_MIN_MS = 1000;
     private static final int SLEEP_MAX_MS = 1500;
@@ -149,7 +148,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         if (!isAtBank(script)) {
             walkToNearestBank(script);
         }
-        return openBankWithRetry(script);
+        return BankingUtils.openBankWithRetry(script);
     }
     private boolean isAtBank(Script script) {
         return Arrays.stream(BANKS).anyMatch(bank -> bank.contains(script.myPosition()));
@@ -195,64 +194,23 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         script.getWalking().webWalk(BANKS);
     }
 
-    private boolean openBankWithRetry(Script script) throws InterruptedException {
-        for (int attempt = 0; attempt < MAX_BANK_ATTEMPTS; attempt++) {
-            if (attemptToOpenBank(script)) {
-                return true;
-            }
-            script.log("Attempt " + (attempt + 1) + " to open bank failed, retrying...");
-            MethodProvider.sleep(BANK_RETRY_WAIT_MS);
-        }
-        script.log("Failed to open bank after " + MAX_BANK_ATTEMPTS + " attempts");
-        return false;
-    }
-
-    private boolean attemptToOpenBank(Script script) throws InterruptedException {
-        return script.getBank().open() && waitForBankToOpen(script);
-    }
-
-    private boolean waitForBankToOpen(Script script) {
-        return new ConditionalSleep(BANK_OPEN_WAIT_MS, 1000) {
-            @Override
-            public boolean condition() {
-                return script.getBank().isOpen();
-            }
-        }.sleep();
-    }
-
     private void depositInventoryAndEquipment(Script script) {
-        if (!script.getInventory().isEmpty()) {
+        if (!script.getInventory().isEmpty() && script.getBank().depositAllExcept(depositExceptions.toArray(new String[0]))) {
             script.log("Depositing inventory");
-            new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().depositAllExcept(depositExceptions.toArray(new String[0]));
-                }
-            }.sleep();
+            Sleep.sleepUntil(()-> script.getInventory().isEmptyExcept(depositExceptions.toArray(new String[0])), ITEM_INTERACT_WAIT_MS);
         }
-        if (!script.getEquipment().isEmpty()) {
+        if (!script.getEquipment().isEmpty() && script.getBank().depositWornItems()) {
             script.log("Depositing equipment");
-            new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().depositWornItems();
-                }
-            }.sleep();
-
+            Sleep.sleepUntil(()-> script.getEquipment().isEmpty(), ITEM_INTERACT_WAIT_MS);
         }
     }
 
     private void withdrawRequiredItems(Script script) throws InterruptedException {
-        if (!script.getBank().isOpen() && !openBankWithRetry(script)) {
+        if (!script.getBank().isOpen() && !BankingUtils.openBankWithRetry(script)) {
             return;
         }
-        if (script.getBank().isBankModeEnabled(Bank.BankMode.WITHDRAW_NOTE)){
-            new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
-                @Override
-                public boolean condition() {
-                    return script.getBank().enableMode(Bank.BankMode.WITHDRAW_ITEM);
-                }
-            }.sleep();
+        if (script.getBank().isBankModeEnabled(Bank.BankMode.WITHDRAW_NOTE) && script.getBank().enableMode(Bank.BankMode.WITHDRAW_ITEM)){
+            Sleep.sleepUntil(()-> script.getBank().isBankModeEnabled(Bank.BankMode.WITHDRAW_ITEM), ITEM_INTERACT_WAIT_MS);
         }
         for (Map.Entry<String, Integer> entry : requiredBankItems.entrySet()) {
             withdrawSingleItem(script, entry.getKey(), entry.getValue());
@@ -270,12 +228,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private void waitForItemInInventory(Script script, String itemName) {
-        new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
-            @Override
-            public boolean condition() {
-                return script.getInventory().contains(itemName);
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> script.getInventory().contains(itemName), ITEM_INTERACT_WAIT_MS);
     }
 
     private void closeBank(Script script) {
@@ -285,12 +238,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private void waitForBankToClose(Script script) {
-        new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
-            @Override
-            public boolean condition() {
-                return !script.getBank().isOpen();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> !script.getBank().isOpen(), ITEM_INTERACT_WAIT_MS);
     }
 
     private void handleMissingItems(Script script) {
@@ -367,11 +315,6 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private void waitForItemEquipped(Script script, int itemId) {
-        new ConditionalSleep(ITEM_INTERACT_WAIT_MS) {
-            @Override
-            public boolean condition() {
-                return script.getEquipment().contains(itemId);
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> script.getEquipment().contains(itemId), ITEM_INTERACT_WAIT_MS);
     }
 }
