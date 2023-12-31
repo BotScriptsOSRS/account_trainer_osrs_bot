@@ -41,9 +41,9 @@ public class FishingState implements BotState {
         } else if (fishingLevel < 40) {
             this.strategy = new FlyStrategy();
         } else if (fishingLevel < 60){
-            this.strategy = new KaramjaStrategy("Cage Fishing spot");
+            this.strategy = new KaramjaStrategy("Cage");
         } else{
-            this.strategy = new KaramjaStrategy("Harpoon Fishing spot");
+            this.strategy = new KaramjaStrategy("Harpoon");
         }
     }
 

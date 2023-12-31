@@ -41,7 +41,7 @@ public class FlyStrategy implements TaskStrategy {
     }
 
     private void startFishing(Script script) {
-        NPC fishingSpot = script.getNpcs().closest("Lure Fishing spot");
+        NPC fishingSpot = script.getNpcs().closest(n -> (n.hasAction("Lure")));
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
             if (fishingSpot.interact("Lure")) { // Assuming "Lure" is the correct action for fly fishing
                 waitForFishingAnimation(script);

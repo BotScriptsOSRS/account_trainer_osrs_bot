@@ -25,10 +25,10 @@ public class KaramjaStrategy implements TaskStrategy {
     private final Area karamjaArea = new Area(2962, 3145, 2912, 3182);
     private final Area depositBoxArea = new Area(3043, 3234, 3046, 3237);
 
-    private final String fishingSpotString;
+    private final String fishingAction;
 
-    public KaramjaStrategy(String fishingSpotString) {
-        this.fishingSpotString = fishingSpotString;
+    public KaramjaStrategy(String fishingAction) {
+        this.fishingAction = fishingAction;
     }
     
     @Override
@@ -167,9 +167,9 @@ public class KaramjaStrategy implements TaskStrategy {
     }
 
     private void startFishing(Script script) {
-        NPC fishingSpot = script.getNpcs().closest(fishingSpotString);
+        NPC fishingSpot = script.getNpcs().closest(n -> (n.hasAction(fishingAction)));
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
-            if (fishingSpot.interact("Cage")) {
+            if (fishingSpot.interact(fishingAction)) {
                 waitForFishingAnimation(script);
             }
         }
