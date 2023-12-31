@@ -127,9 +127,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private void sellItemsOnGrandExchange(MainScript script) {
-        if (!Banks.GRAND_EXCHANGE.contains(script.myPlayer())) {
-            depositInventoryAndEquipment(script);
-        }
+        depositInventoryAndEquipment(script);
         TaskStrategy sellGrandExchangeStrategy = new SellGrandExchangeStrategy();
         GrandExchangeState grandExchangeState = new GrandExchangeState(script, sellGrandExchangeStrategy, returnState);
         script.setCurrentState(grandExchangeState);

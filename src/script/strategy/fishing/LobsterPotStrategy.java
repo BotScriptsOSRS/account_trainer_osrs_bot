@@ -47,7 +47,7 @@ public class LobsterPotStrategy implements TaskStrategy {
 
     private void walkToFishingArea(Script script) throws InterruptedException {
         script.log("Walking to lobster pot fishing area");
-        if (karamjaArea.contains(script.myPlayer())) {
+        if (karamjaArea.contains(script.myPlayer()) && !script.myPlayer().getPosition().equals(boatPositionKaramja)) {
             script.getWalking().webWalk(fishingArea);
         } else if (!script.myPlayer().getPosition().equals(boatPositionKaramja) && !portSarimArea.contains(script.myPlayer())) {
             script.getWalking().webWalk(portSarimArea);
