@@ -56,7 +56,6 @@ public class EmeraldRingStrategy implements TaskStrategy {
         return script.getWidgets().singleFilter(
                 script.getWidgets().getAll(),
                 widget -> widget.isVisible() && widget.getItemId() == 1639 && widget.getPosition().equals(new Point(EMERALD_RING_WIDGET_X, EMERALD_RING_WIDGET_Y)));
-
     }
 
     private boolean isEmeraldRingWidgetWorking(Script script) {

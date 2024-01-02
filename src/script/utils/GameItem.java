@@ -18,7 +18,10 @@ public enum GameItem {
     RING_MOULD(1592, "Ring mould"),
     GOLD_BAR(2357, "Gold bar"),
     EMERALD(1605, "Emerald"),
-    HARPOON(311, "Harpoon");
+    HARPOON(311, "Harpoon"),
+    RAW_LOBSTER(377, "Raw lobster"),
+    RAW_TUNA(359, "Raw tuna"),
+    RAW_SWORDFISH(71, "Raw swordfish");
 
     private final int id;
     private final String name;

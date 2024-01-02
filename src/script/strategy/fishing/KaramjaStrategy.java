@@ -11,6 +11,8 @@ import script.utils.Sleep;
 
 import java.util.Arrays;
 
+import static org.osbot.rs07.script.MethodProvider.random;
+
 public class KaramjaStrategy implements TaskStrategy {
 
     private static final int npcIdPortKaramja = 3648;
@@ -101,7 +103,7 @@ public class KaramjaStrategy implements TaskStrategy {
 
     private void waitForArrivalAtPosition(Script script, Position position) {
         script.log("Wait for arrival in Karamja");
-        Sleep.sleepUntil(()-> script.myPlayer().getPosition() == position, 10000);
+        Sleep.sleepUntil(()-> script.myPlayer().getPosition() == position, random(7000, 10000));
         script.log("Arrived in Karamja");
     }
 
@@ -150,11 +152,11 @@ public class KaramjaStrategy implements TaskStrategy {
     private void depositItems(Script script) {
         Sleep.sleepUntil(()-> script.getDepositBox().open(), 5000);
         if (script.getDepositBox().isOpen()) {
-            script.getDepositBox().depositAllExcept(GameItem.LOBSTER_POT.getId(), GameItem.COINS.getId());
+            script.getDepositBox().depositAllExcept(GameItem.HARPOON.getId(), GameItem.LOBSTER_POT.getId(), GameItem.COINS.getId());
 
-            Sleep.sleepUntil(()-> script.getInventory().contains(GameItem.LOBSTER_POT.getId())
-                    && script.getInventory().contains(GameItem.COINS.getId())
-                    && script.getInventory().getEmptySlots() > 0, 5000);
+            Sleep.sleepUntil(()-> !script.getInventory().contains(GameItem.RAW_TUNA.getId())
+                    && !script.getInventory().contains(GameItem.RAW_LOBSTER.getId())
+                    && !script.getInventory().contains(GameItem.RAW_SWORDFISH.getId()), 5000);
 
             script.getDepositBox().close();
 

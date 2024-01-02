@@ -3,6 +3,7 @@ package script.strategy.grand_exchange;
 import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.NPC;
+import org.osbot.rs07.api.ui.RS2Widget;
 import org.osbot.rs07.script.Script;
 import script.strategy.TaskStrategy;
 import script.utils.BankingUtils;
@@ -52,11 +53,56 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
         Sleep.sleepUntil(()-> !script.getGrandExchange().isOpen(), SLEEP_DURATION_MS);
     }
 
+//    private void buyAndCollectItems(Script script) {
+//        final int MAX_RETRIES = 5;
+//        final double PRICE_INCREMENT_FACTOR = 1.1; // 10% increase for each retry
+//
+//        for (Map.Entry<String, Integer> entry : requiredItems.entrySet()) {
+//            int itemId = GameItem.getIdByName(entry.getKey());
+//            int itemPrice = 100; // script.getGrandExchange().getOverallPrice(itemId);
+//
+//            for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
+//                int adjustedPrice = itemPrice; //adjustPriceBasedOnTier(itemPrice, entry.getValue());
+//                script.log("Attempt " + (attempt + 1) + ": Buying " + entry.getValue() + " of " + entry.getKey() + " for " + entry.getValue() * adjustedPrice);
+//                if (script.getGrandExchange().buyItem(itemId, entry.getKey(), adjustedPrice, entry.getValue())){
+//                    script.log("waiting to see widget");
+//                    Sleep.sleepUntil(() -> isWidgetWorking(script), 5000);
+//                }
+//                // Wait for a set period or until item is bought
+//                if (script.getGrandExchange().collect(true)) {
+//                    script.log("Item successfully bought and collected.");
+//                    break; // Exit the loop if the purchase was successful
+//                } else {
+//                    script.log("Bid not successful, retrying...");
+//                    cancelOffer(script);
+//                    itemPrice = (int) (itemPrice * PRICE_INCREMENT_FACTOR); // Increase the price for the next attempt
+//                }
+//            }
+//        }
+//    }
+
+    private void cancelOffer(Script script) {
+        if (isWidgetWorking(script) && abortOfferWidget(script).interact("Abort offer")) {
+            Sleep.sleepUntil(() -> script.getGrandExchange().collect(), SLEEP_DURATION_MS);
+        }
+    }
+
+    private boolean isWidgetWorking(Script script) {
+        RS2Widget abortOfferWidget = abortOfferWidget(script);
+        return abortOfferWidget != null && abortOfferWidget.isVisible();
+    }
+
+    private RS2Widget abortOfferWidget(Script script) {
+        return script.getWidgets().singleFilter(
+                script.getWidgets().getAll(),
+                widget -> widget.isVisible() && widget.hasAction("Abort offer"));
+    }
+
+
     private void buyAndCollectItems(Script script) {
         for (Map.Entry<String, Integer> entry : requiredItems.entrySet()) {
             int itemId = GameItem.getIdByName(entry.getKey());
             int itemPrice = script.getGrandExchange().getOverallPrice(itemId);
-
             // Adjusted pricing strategy
             int adjustedPrice = adjustPriceBasedOnTier(itemPrice, entry.getValue());
 
@@ -109,8 +155,7 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
     }
 
     private boolean withdrawCoins(Script script) {
-        int MINIMUM_COINS = 50000;
-        if (script.getBank().contains(GameItem.COINS.getId()) && script.getBank().getAmount(GameItem.COINS.getId()) > MINIMUM_COINS){
+        if (script.getBank().contains(GameItem.COINS.getId())){
             script.getBank().withdrawAll(GameItem.COINS.getId());
             waitForItemInInventory(script, GameItem.COINS.getName());
             return true;

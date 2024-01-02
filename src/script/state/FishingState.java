@@ -53,6 +53,7 @@ public class FishingState implements BotState {
 
         for (int itemId : requiredItemIds) {
             if (!script.getInventory().contains(itemId)) {
+                script.log("Inventory does not contain: " + GameItem.getNameById(itemId));
                 switchToBankingStateForFishingEquipment(script, requiredItemIds);
                 return false;
             }

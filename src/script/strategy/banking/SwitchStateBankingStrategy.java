@@ -165,7 +165,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private boolean tooManyCoins(Script script){
-        return getTotalItemAmount(script, GameItem.COINS.getName()) > 10000000;
+        return getTotalItemAmount(script, GameItem.COINS.getName()) > 1000000;
     }
 
     private boolean tooLittleCoins(Script script){
@@ -275,7 +275,12 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private void proceedToPurchaseItems(Script script, Map<String, Integer> itemsToPurchase) {
-        depositInventoryAndEquipment(script);
+        if (!Banks.GRAND_EXCHANGE.contains(script.myPlayer())) {
+            depositInventoryAndEquipment(script);
+        } else if (!script.getInventory().isEmptyExcept(GameItem.COINS.getId()) && script.getBank().depositAllExcept(GameItem.COINS.getId())){
+                script.log("Depositing inventory");
+                Sleep.sleepUntil(()-> script.getInventory().isEmptyExcept(GameItem.COINS.getId()), ITEM_INTERACT_WAIT_MS);
+        }
         script.log("Transitioning to Grand Exchange State to buy missing items.");
         TaskStrategy grandExchangeStrategy = new BuyGrandExchangeStrategy(itemsToPurchase);
         ((MainScript) script).setCurrentState(new GrandExchangeState((MainScript) script, grandExchangeStrategy, returnState));
