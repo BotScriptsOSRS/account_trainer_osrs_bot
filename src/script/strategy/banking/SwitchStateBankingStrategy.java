@@ -16,10 +16,7 @@ import script.strategy.TaskStrategy;
 import script.strategy.grand_exchange.BuyGrandExchangeStrategy;
 import script.strategy.grand_exchange.SellGrandExchangeStrategy;
 import script.strategy.muling.MulingStrategy;
-import script.utils.BankingUtils;
-import script.utils.GameItem;
-import script.utils.SellableItems;
-import script.utils.Sleep;
+import script.utils.*;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -36,6 +33,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     private final Map<String, Integer> itemsToBuyInAdvance;
     private final Map<String, Integer> requiredBankItems;
     private final List<String> depositExceptions;
+
     private static final Area[] BANKS = {
             Banks.LUMBRIDGE_UPPER,
             Banks.VARROCK_WEST,
@@ -75,6 +73,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
             mainScript.log("Failed to prepare for banking.");
             return;
         }
+
         if (checkAndHandleCoinConditions(mainScript)) {
             return;
         }
@@ -165,7 +164,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     }
 
     private boolean tooManyCoins(Script script){
-        return getTotalItemAmount(script, GameItem.COINS.getName()) > 1000000;
+        return getTotalItemAmount(script, GameItem.COINS.getName()) > 10000000;
     }
 
     private boolean tooLittleCoins(Script script){

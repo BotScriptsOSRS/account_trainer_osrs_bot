@@ -73,6 +73,7 @@ public class WoodcuttingState implements BotState {
         int woodcuttingLevel = script.getSkills().getStatic(Skill.WOODCUTTING);
         List<Integer> itemsToBuy = new ArrayList<>();
         if (woodcuttingLevel <= 6) {
+            itemsToBuy.add(GameItem.BRONZE_AXE.getId());
             itemsToBuy.add(GameItem.STEEL_AXE.getId());
             itemsToBuy.add(GameItem.BLACK_AXE.getId());
             itemsToBuy.add(GameItem.MITHRIL_AXE.getId());

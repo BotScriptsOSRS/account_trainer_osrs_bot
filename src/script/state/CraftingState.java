@@ -104,7 +104,7 @@ public class CraftingState implements BotState {
 
         Map<Integer, Integer> requiredItemsForCrafting = calculateRequiredItemsForCrafting(currentRequiredItems, craftingLevel);
 
-        Map<Integer, Integer> futureCraftingItemsMap = prepareFutureCraftingItems(script, goldBarsAndEmeraldQuantity);
+        Map<Integer, Integer> futureCraftingItemsMap = craftingItemsToBuy(script, goldBarsAndEmeraldQuantity, craftingLevel);
 
         List<String> depositExceptionNames;
 
@@ -151,17 +151,19 @@ public class CraftingState implements BotState {
         return requiredItems;
     }
 
-    private Map<Integer, Integer> prepareFutureCraftingItems(MainScript script, int goldBarsAndEmeraldQuantity) {
+    private Map<Integer, Integer> craftingItemsToBuy(MainScript script, int goldBarsAndEmeraldQuantity, int craftingLevel) {
         List<Integer> futureCraftingItems = getCraftingItemsToBuy(script);
         Map<Integer, Integer> futureCraftingItemsMap = new HashMap<>();
         for (Integer futureItemId : futureCraftingItems) {
             int quantity = 1;
             if (futureItemId == GameItem.GOLD_BAR.getId() || futureItemId == GameItem.EMERALD.getId()) {
                 quantity = goldBarsAndEmeraldQuantity;
-            } else if (futureItemId == GameItem.THREAD.getId()) {
+            } else if (futureItemId == GameItem.THREAD.getId() && craftingLevel == 1) {
                 quantity = 10;
-            } else if (futureItemId == GameItem.SOFT_LEATHER.getId()) {
+            } else if (futureItemId == GameItem.SOFT_LEATHER.getId() && craftingLevel == 1) {
                 quantity = 50;
+            } else if (futureItemId == GameItem.THREAD.getId() || futureItemId == GameItem.SOFT_LEATHER.getId()){
+                quantity = 10;
             }
             if (!script.getBank().contains(futureItemId)) {
                 futureCraftingItemsMap.put(futureItemId, quantity);

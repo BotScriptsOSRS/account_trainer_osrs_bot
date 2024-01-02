@@ -33,6 +33,10 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
             script.log("Checking bank for coins");
             checkBankForCoins(script);
         }
+        if (script.getInventory().getAmount(GameItem.COINS.getId())<50000){
+            script.log("Not enough coins to buy items, logging off.");
+            script.stop();
+        }
         if (!script.getGrandExchange().isOpen()) {
             script.log("Opening GrandExchange");
             openGrandExchange(script);
@@ -53,37 +57,38 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
         Sleep.sleepUntil(()-> !script.getGrandExchange().isOpen(), SLEEP_DURATION_MS);
     }
 
-//    private void buyAndCollectItems(Script script) {
-//        final int MAX_RETRIES = 5;
-//        final double PRICE_INCREMENT_FACTOR = 1.1; // 10% increase for each retry
-//
-//        for (Map.Entry<String, Integer> entry : requiredItems.entrySet()) {
-//            int itemId = GameItem.getIdByName(entry.getKey());
-//            int itemPrice = 100; // script.getGrandExchange().getOverallPrice(itemId);
-//
-//            for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
-//                int adjustedPrice = itemPrice; //adjustPriceBasedOnTier(itemPrice, entry.getValue());
-//                script.log("Attempt " + (attempt + 1) + ": Buying " + entry.getValue() + " of " + entry.getKey() + " for " + entry.getValue() * adjustedPrice);
-//                if (script.getGrandExchange().buyItem(itemId, entry.getKey(), adjustedPrice, entry.getValue())){
-//                    script.log("waiting to see widget");
-//                    Sleep.sleepUntil(() -> isWidgetWorking(script), 5000);
-//                }
-//                // Wait for a set period or until item is bought
-//                if (script.getGrandExchange().collect(true)) {
-//                    script.log("Item successfully bought and collected.");
-//                    break; // Exit the loop if the purchase was successful
-//                } else {
-//                    script.log("Bid not successful, retrying...");
-//                    cancelOffer(script);
-//                    itemPrice = (int) (itemPrice * PRICE_INCREMENT_FACTOR); // Increase the price for the next attempt
-//                }
-//            }
-//        }
-//    }
+    private void buyAndCollectItems(Script script) {
+        final int MAX_RETRIES = 5;
+        final double PRICE_INCREMENT_FACTOR = 1.1; // 10% increase for each retry
+
+        for (Map.Entry<String, Integer> entry : requiredItems.entrySet()) {
+            int itemId = GameItem.getIdByName(entry.getKey());
+            int itemPrice = script.getGrandExchange().getOverallPrice(itemId);
+
+            for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                int adjustedPrice = adjustPriceBasedOnTier(itemPrice, entry.getValue());
+                script.log("Attempt " + (attempt + 1) + ": Buying " + entry.getValue() + " of " + entry.getKey() + " for " + entry.getValue() * adjustedPrice);
+                if (script.getGrandExchange().buyItem(itemId, entry.getKey(), adjustedPrice, entry.getValue())){
+                    script.log("waiting to see widget");
+                    Sleep.sleepUntil(() -> isCollectWidgetWorking(script), 3000);
+                }
+                // Wait for a set period or until item is bought
+                if (script.getGrandExchange().collect(true)) {
+                    script.log("Item successfully bought and collected.");
+                    break; // Exit the loop if the purchase was successful
+                } else {
+                    script.log("Bid not successful, retrying...");
+                    cancelOffer(script);
+                    itemPrice = (int) (itemPrice * PRICE_INCREMENT_FACTOR); // Increase the price for the next attempt
+                }
+            }
+        }
+    }
 
     private void cancelOffer(Script script) {
         if (isWidgetWorking(script) && abortOfferWidget(script).interact("Abort offer")) {
             Sleep.sleepUntil(() -> script.getGrandExchange().collect(), SLEEP_DURATION_MS);
+            Sleep.sleepUntil(() -> !isCollectWidgetWorking(script), SLEEP_DURATION_MS);
         }
     }
 
@@ -92,25 +97,21 @@ public class BuyGrandExchangeStrategy implements TaskStrategy {
         return abortOfferWidget != null && abortOfferWidget.isVisible();
     }
 
+    private boolean isCollectWidgetWorking(Script script) {
+        RS2Widget collectWidget = collectWidget(script);
+        return collectWidget != null && collectWidget.isVisible();
+    }
+
     private RS2Widget abortOfferWidget(Script script) {
         return script.getWidgets().singleFilter(
                 script.getWidgets().getAll(),
                 widget -> widget.isVisible() && widget.hasAction("Abort offer"));
     }
 
-
-    private void buyAndCollectItems(Script script) {
-        for (Map.Entry<String, Integer> entry : requiredItems.entrySet()) {
-            int itemId = GameItem.getIdByName(entry.getKey());
-            int itemPrice = script.getGrandExchange().getOverallPrice(itemId);
-            // Adjusted pricing strategy
-            int adjustedPrice = adjustPriceBasedOnTier(itemPrice, entry.getValue());
-
-            final int finalPrice = adjustedPrice;
-            script.log("Buying "+ entry.getValue() + " of " + entry.getKey() + " for " + entry.getValue()*adjustedPrice);
-            Sleep.sleepUntil(()-> script.getGrandExchange().buyItem(itemId, entry.getKey(), finalPrice, entry.getValue()), SLEEP_DURATION_MS);
-            Sleep.sleepUntil(()->  script.getGrandExchange().collect(true), SLEEP_DURATION_MS);
-        }
+    private RS2Widget collectWidget(Script script) {
+        return script.getWidgets().singleFilter(
+                script.getWidgets().getAll(),
+                widget -> widget.isVisible() && widget.hasAction("Collect to bank"));
     }
 
     private int adjustPriceBasedOnTier(int itemPrice, int itemQuantity) {
