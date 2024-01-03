@@ -5,10 +5,12 @@ import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
 import script.paint.OSDPainter;
 import script.state.*;
+import script.strategy.banking.SwitchStateBankingStrategy;
 import script.strategy.fishing.KaramjaStrategy;
 
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.List;
 
@@ -21,6 +23,10 @@ public class MainScript extends Script {
     private Map<Class<? extends BotState>, BotState> stateMap;
     private final Area karamjaArea = new Area(2962, 3145, 2912, 3182);
     private KaramjaStrategy karamjaStrategy;
+    private boolean tooManyCoins = false;
+    LocalTime currentTime = LocalTime.now();
+    LocalTime startTime = LocalTime.of(21, 0);
+    LocalTime endTime = LocalTime.of(21, 30);
 
     @Override
     public void onStart() {
@@ -41,6 +47,11 @@ public class MainScript extends Script {
     public int onLoop() throws InterruptedException {
         if (shouldLeaveKaramja()) {
             karamjaStrategy.leaveKaramja(this);
+        } else if (shouldLeaveKaramja() && tooManyCoins && currentTime.isAfter(startTime) && currentTime.isBefore(endTime)){
+            karamjaStrategy.leaveKaramja(this);
+            setBankingState();
+        } else if (tooManyCoins && currentTime.isAfter(startTime) && currentTime.isBefore(endTime)){
+            setBankingState();
         } else {
             currentState.execute(this);
             if (!stateChanged) {
@@ -93,4 +104,19 @@ public class MainScript extends Script {
     private boolean shouldLeaveKaramja() {
         return karamjaArea.contains(this.myPlayer()) && !(currentState instanceof FishingState);
     }
+
+    public void setTooManyCoins(boolean tooManyCoins) {
+        this.tooManyCoins = tooManyCoins;
+    }
+    public void setBankingState() {
+        Map<Integer, Integer> defaultRequiredBankItems = new HashMap<>();
+        Map<Integer, Integer> defaultItemsToBuyInAdvance = new HashMap<>();
+
+        SwitchStateBankingStrategy bankingStrategy = new SwitchStateBankingStrategy(
+                defaultRequiredBankItems, defaultItemsToBuyInAdvance, this.currentState
+        );
+        BankingState bankingState = new BankingState(this, bankingStrategy, this.currentState);
+        this.setCurrentState(bankingState);
+    }
+
 }

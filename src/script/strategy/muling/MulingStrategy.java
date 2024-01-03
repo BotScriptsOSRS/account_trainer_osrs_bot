@@ -4,6 +4,7 @@ import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.script.MethodProvider;
 import org.osbot.rs07.script.Script;
+import script.MainScript;
 import script.strategy.TaskStrategy;
 import script.utils.BankingUtils;
 import script.utils.GameItem;
@@ -23,10 +24,10 @@ public class MulingStrategy implements TaskStrategy {
         hopToWorld(script);
         walkToMulingArea(script);
         handleTrading(script);
-        hopToRandomWorld(script);
+        hopToRandomWorld((MainScript) script);
     }
 
-    private void hopToRandomWorld(Script script) {
+    private void hopToRandomWorld(MainScript script) {
         if (!script.getInventory().contains(GameItem.COINS.getId())
                 && script.getWorlds().getCurrentWorld()==456
                 && !script.getTrade().isFirstInterfaceOpen()
@@ -34,6 +35,7 @@ public class MulingStrategy implements TaskStrategy {
             script.log("Hop to random world");
             waitForCondition(() -> script.getWorlds().hopToF2PWorld());
         }
+        script.setTooManyCoins(false);
     }
 
     private void handleCoinsInInventory(Script script) throws InterruptedException {

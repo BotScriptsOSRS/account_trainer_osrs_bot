@@ -163,7 +163,8 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         return true;
     }
 
-    private boolean tooManyCoins(Script script){
+    private boolean tooManyCoins(MainScript script){
+        script.setTooManyCoins(true);
         return getTotalItemAmount(script, GameItem.COINS.getName()) > 10000000;
     }
 
