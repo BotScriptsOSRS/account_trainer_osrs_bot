@@ -10,14 +10,11 @@ import script.strategy.TaskStrategy;
 import script.utils.GameItem;
 import script.utils.Sleep;
 
-import java.awt.*;
 
 public class EmeraldRingStrategy implements TaskStrategy {
 
     private static final Area FURNACE_AREA = new Area(3110, 3496, 3105, 3501);
     private static final Position FURNACE_POSITION = new Position(3109, 3499, 0);
-    private static final int EMERALD_RING_WIDGET_X = 141;
-    private static final int EMERALD_RING_WIDGET_Y = 87;
     private static final int SMELT_SLEEP_TIME_MS = 5000;
     private static final int CRAFT_SLEEP_TIME_MS = 120000;
 
@@ -55,7 +52,7 @@ public class EmeraldRingStrategy implements TaskStrategy {
     private RS2Widget getEmeraldRingWidget(Script script) {
         return script.getWidgets().singleFilter(
                 script.getWidgets().getAll(),
-                widget -> widget.isVisible() && widget.getItemId() == 1639 && widget.getPosition().equals(new Point(EMERALD_RING_WIDGET_X, EMERALD_RING_WIDGET_Y)));
+                widget -> widget.isVisible() && widget.hasAction("Make <col=ff9040>Emerald ring</col>"));
     }
 
     private boolean isEmeraldRingWidgetWorking(Script script) {

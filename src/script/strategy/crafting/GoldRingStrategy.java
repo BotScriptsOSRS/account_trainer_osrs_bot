@@ -10,14 +10,11 @@ import script.strategy.TaskStrategy;
 import script.utils.GameItem;
 import script.utils.Sleep;
 
-import java.awt.*;
 
 public class GoldRingStrategy implements TaskStrategy {
 
     private static final Area FURNACE_AREA = new Area(3110, 3496, 3105, 3501);
     private static final Position FURNACE_POSITION = new Position(3109,3499,0);
-    private static final int GOLD_RING_WIDGET_X = 51;
-    private static final int GOLD_RING_WIDGET_Y = 87;
     private static final int SMELT_SLEEP_TIME_MS = 5000;
     private static final int CRAFT_SLEEP_TIME_MS = 120000;
 
@@ -55,8 +52,7 @@ public class GoldRingStrategy implements TaskStrategy {
     private RS2Widget getGoldRingWidget(Script script) {
         return script.getWidgets().singleFilter(
                 script.getWidgets().getAll(),
-                widget -> widget.isVisible() && widget.getItemId() == 1635
-                    && widget.getPosition().equals(new Point(GOLD_RING_WIDGET_X, GOLD_RING_WIDGET_Y)));
+                widget -> widget.isVisible() && widget.hasAction("Make <col=ff9040>Gold ring</col>"));
     }
 
     private boolean isGoldRingWidgetWorking(Script script) {
