@@ -10,7 +10,7 @@ public enum SellableItems {
     RAW_SALMON(331, "Raw salmon"),
     RAW_LOBSTER(377, "Raw lobster"),
     RAW_TUNA(359, "Raw tuna"),
-    RAW_SWORDFISH(71, "Raw swordfish"),
+    RAW_SWORDFISH(371, "Raw swordfish"),
     GOLD_RINGS(1635, "Gold ring"),
     EMERALD_RINGS(1639, "Emerald ring");
 
