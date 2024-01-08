@@ -62,7 +62,7 @@ public class TreeStrategy implements TaskStrategy {
             return;
         }
 
-        Entity tree = script.getObjects().closest("Tree");
+        Entity tree = script.getObjects().closest(woodcuttingArea, "Tree");
         if (tree != null && tree.interact("Chop down")) {
             waitForWoodcuttingToStart(script);
         }

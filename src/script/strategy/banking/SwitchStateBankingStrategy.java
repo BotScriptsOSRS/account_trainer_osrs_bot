@@ -35,7 +35,6 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     private final List<String> depositExceptions;
 
     private static final Area[] BANKS = {
-            Banks.LUMBRIDGE_UPPER,
             Banks.VARROCK_WEST,
             Banks.VARROCK_EAST,
             Banks.FALADOR_EAST,
@@ -156,7 +155,7 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
     private boolean areAllItemsAvailable(Script script) throws InterruptedException {
         MethodProvider.sleep(random(SLEEP_MIN_MS, SLEEP_MAX_MS));
         for (Map.Entry<String, Integer> entry : requiredBankItems.entrySet()) {
-            if (!isItemAvailable(script, entry.getKey(), entry.getValue())) {
+            if (!isItemAvailable(script, entry.getKey())) {
                 return false;
             }
         }
@@ -172,9 +171,9 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         return getTotalItemAmount(script, GameItem.COINS.getName()) < 250000;
     }
 
-    private boolean isItemAvailable(Script script, String itemName, int requiredQuantity) {
+    private boolean isItemAvailable(Script script, String itemName) {
         int totalAmount = getTotalItemAmount(script, itemName);
-        return totalAmount >= requiredQuantity || isItemAvailableInBank(script, itemName, requiredQuantity - totalAmount);
+        return totalAmount > 0 || isItemAvailableInBank(script, itemName);
     }
 
     private int getTotalItemAmount(Script script, String itemName) {
@@ -184,9 +183,9 @@ public class SwitchStateBankingStrategy implements TaskStrategy {
         return amountBank + amountInInventory + amountEquipped;
     }
 
-    private boolean isItemAvailableInBank(Script script, String itemName, int requiredAmount) {
+    private boolean isItemAvailableInBank(Script script, String itemName) {
         Item bankItem = script.getBank().getItem(itemName);
-        return bankItem != null && bankItem.getAmount() >= requiredAmount;
+        return bankItem != null && bankItem.getAmount() > 0;
     }
 
     private void walkToNearestBank(Script script) {
