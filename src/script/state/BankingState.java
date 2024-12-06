@@ -8,9 +8,9 @@ public class BankingState implements BotState {
     private final BotState returnState; // State to return to after banking
 
     public BankingState(MainScript script, TaskStrategy bankingStrategy, BotState returnState) {
+        script.log("Entering banking state");
         this.bankingStrategy = bankingStrategy;
         this.returnState = returnState;
-        script.log("Entering banking state");
     }
 
     @Override

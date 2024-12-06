@@ -3,19 +3,14 @@ package script.strategy.fishing;
 import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.strategy.TaskStrategy;
+import script.utils.Sleep;
 
-public class FlyFishingStrategy implements TaskStrategy {
+public class FlyStrategy implements TaskStrategy {
 
-    private final int flyFishingRodId;
-    private final int featherId;
-    private static final int FLY_FISHING_SPOT_ID = 1526;
     private final Area fishingArea = new Area(3100, 3423, 3110, 3436);
 
-    public FlyFishingStrategy(int flyFishingRodId, int featherId) {
-        this.flyFishingRodId = flyFishingRodId;
-        this.featherId = featherId;
+    public FlyStrategy() {
     }
 
     @Override
@@ -42,11 +37,11 @@ public class FlyFishingStrategy implements TaskStrategy {
 
     private void handleFullInventory(Script script) {
         script.log("Inventory full, dropping fish");
-        script.getInventory().dropAllExcept(flyFishingRodId, featherId);
+        script.getInventory().dropAll("Raw trout", "Raw salmon");
     }
 
     private void startFishing(Script script) {
-        NPC fishingSpot = script.getNpcs().closest(FLY_FISHING_SPOT_ID);
+        NPC fishingSpot = script.getNpcs().closest(n -> (n.hasAction("Lure")));
         if (fishingSpot != null && !script.myPlayer().isAnimating()) {
             if (fishingSpot.interact("Lure")) { // Assuming "Lure" is the correct action for fly fishing
                 waitForFishingAnimation(script);
@@ -55,11 +50,6 @@ public class FlyFishingStrategy implements TaskStrategy {
     }
 
     private void waitForFishingAnimation(Script script) {
-        new ConditionalSleep(5000, 1000) {
-            @Override
-            public boolean condition() {
-                return script.myPlayer().isAnimating();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> script.myPlayer().isAnimating(), 5000);
     }
 }

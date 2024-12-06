@@ -1,28 +1,29 @@
 package script.strategy.woodcutting;
 
 import org.osbot.rs07.api.map.Area;
+import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
 import script.MainScript;
 import script.state.WoodcuttingState;
 import script.strategy.TaskStrategy;
+import script.utils.Sleep;
 
-public class OakWoodcuttingStrategy implements TaskStrategy {
+public class OakStrategy implements TaskStrategy {
 
     private final int bestAxeId;
     private final MainScript mainScript; // Add reference to MainScript
     private final Area woodcuttingArea = new Area(3103, 3241, 3098, 3245);
     private final WoodcuttingState woodcuttingState;
 
-    public OakWoodcuttingStrategy(MainScript mainScript, int bestAxeId, WoodcuttingState woodcuttingState) {
+    public OakStrategy(MainScript mainScript, int bestAxeId, WoodcuttingState woodcuttingState) {
         this.mainScript = mainScript;
         this.bestAxeId = bestAxeId;
         this.woodcuttingState = woodcuttingState;
     }
     @Override
     public void execute(Script script) {
-        if (!isInWoodcuttingArea(script)) {
+        if (!isInWoodcuttingArea(script) && !script.getInventory().isFull()) {
             walkToWoodcuttingArea(script);
         } else if (script.getInventory().isFull()) {
             handleFullInventory(script);
@@ -37,7 +38,10 @@ public class OakWoodcuttingStrategy implements TaskStrategy {
 
     private void walkToWoodcuttingArea(Script script) {
         script.log("Walking to woodcutting area");
-        script.getWalking().webWalk(woodcuttingArea);
+        if (!Banks.DRAYNOR.contains(script.myPlayer())){
+            script.getWalking().webWalk(woodcuttingArea);
+        }
+        script.getWalking().walk(woodcuttingArea);
     }
 
     private void handleFullInventory(Script script) {
@@ -65,11 +69,6 @@ public class OakWoodcuttingStrategy implements TaskStrategy {
     }
 
     private void waitForWoodcuttingToStart(Script script) {
-        new ConditionalSleep(8000, 1500) {
-            @Override
-            public boolean condition() {
-                return script.myPlayer().isAnimating();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> script.myPlayer().isAnimating(), 8000);
     }
 }

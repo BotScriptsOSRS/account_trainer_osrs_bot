@@ -1,26 +1,30 @@
 package script.strategy.woodcutting;
 
 import org.osbot.rs07.api.map.Area;
-import org.osbot.rs07.api.map.Position;
+import org.osbot.rs07.api.map.constants.Banks;
 import org.osbot.rs07.api.model.Entity;
 import org.osbot.rs07.script.Script;
-import org.osbot.rs07.utility.ConditionalSleep;
+import script.MainScript;
+import script.state.WoodcuttingState;
 import script.strategy.TaskStrategy;
+import script.utils.Sleep;
 
-public class TreeWoodcuttingStrategy implements TaskStrategy {
+public class YewStrategy implements TaskStrategy {
 
     private final int bestAxeId;
-    private final Area woodcuttingArea = new Area(3154, 3206, 3206, 3262);
-    private final Position safePosition = new Position(3194, 3241, 0);
+    private final MainScript mainScript;
+    private final Area woodcuttingArea = new Area(3085, 3482, 3089, 3468);
 
-    public TreeWoodcuttingStrategy(int bestAxeId) {
+    private final WoodcuttingState woodcuttingState;
+
+    public YewStrategy(MainScript mainScript, int bestAxeId, WoodcuttingState woodcuttingState) {
+        this.mainScript = mainScript;
         this.bestAxeId = bestAxeId;
+        this.woodcuttingState = woodcuttingState;
     }
     @Override
     public void execute(Script script) {
-        if (isUnderAttack(script)) {
-            moveToSafePosition(script);
-        } else if (!isInWoodcuttingArea(script)) {
+        if (!isInWoodcuttingArea(script) && !script.getInventory().isFull()) {
             walkToWoodcuttingArea(script);
         } else if (script.getInventory().isFull()) {
             handleFullInventory(script);
@@ -29,29 +33,22 @@ public class TreeWoodcuttingStrategy implements TaskStrategy {
         }
     }
 
-    private boolean isUnderAttack(Script script) {
-        return script.myPlayer().isUnderAttack();
-    }
-
-    private void moveToSafePosition(Script script) {
-        script.log("Under attack, moving to safe position");
-        script.getWalking().webWalk(safePosition);
-    }
-
     private boolean isInWoodcuttingArea(Script script) {
         return woodcuttingArea.contains(script.myPlayer());
     }
 
     private void walkToWoodcuttingArea(Script script) {
         script.log("Walking to woodcutting area");
-        script.getWalking().webWalk(woodcuttingArea);
+        if (!Banks.EDGEVILLE.contains(script.myPlayer())){
+            script.getWalking().webWalk(woodcuttingArea);
+        }
+        script.getWalking().walk(woodcuttingArea);
     }
 
     private void handleFullInventory(Script script) {
-        script.log("Inventory full, dropping logs");
-        script.getInventory().dropAll("Logs"); // Adjust the item name if needed
+        script.log("Inventory full, switching to banking state");
+        woodcuttingState.switchToBankingState(mainScript);
     }
-
     private void startWoodcutting(Script script) {
         if (!hasAppropriateAxe(script)) {
             script.log("No appropriate axe found, unable to cut trees");
@@ -62,7 +59,7 @@ public class TreeWoodcuttingStrategy implements TaskStrategy {
             return;
         }
 
-        Entity tree = script.getObjects().closest("Tree");
+        Entity tree = script.getObjects().closest(woodcuttingArea, "Yew tree");
         if (tree != null && tree.interact("Chop down")) {
             waitForWoodcuttingToStart(script);
         }
@@ -73,11 +70,6 @@ public class TreeWoodcuttingStrategy implements TaskStrategy {
     }
 
     private void waitForWoodcuttingToStart(Script script) {
-        new ConditionalSleep(8000, 1500) {
-            @Override
-            public boolean condition() {
-                return script.myPlayer().isAnimating();
-            }
-        }.sleep();
+        Sleep.sleepUntil(()-> script.myPlayer().isAnimating(), 8000);
     }
 }
